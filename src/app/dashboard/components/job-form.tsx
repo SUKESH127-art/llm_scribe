@@ -3,7 +3,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createCrawlJob } from "@/lib/actions";
 import { toast } from "sonner";
 import {
@@ -16,10 +15,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export function JobForm() {
+// 1. Update the props to accept the callback function
+export function JobForm({
+	onJobSubmitted,
+}: {
+	onJobSubmitted: (url: string) => void;
+}) {
 	const [url, setUrl] = useState("");
 	const [isPending, setIsPending] = useState(false);
-	const router = useRouter();
+	// 2. The router is no longer needed here.
+
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!url) {
@@ -32,8 +37,9 @@ export function JobForm() {
 
 		if (result.success) {
 			toast.success(result.message);
-			setUrl(""); // Clear input on success
-			router.refresh();
+			// 3. Instead of refreshing, call the function from our parent component
+			onJobSubmitted(url);
+			setUrl("");
 		} else {
 			toast.error(result.message);
 		}
@@ -43,27 +49,20 @@ export function JobForm() {
 
 	return (
 		<Card className="mb-6">
-			<CardHeader>
-				<CardTitle>Create New Job</CardTitle>
-				<CardDescription>
-					Enter a URL to start the crawling process.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<form onSubmit={handleSubmit} className="flex items-center gap-4">
-					<Input
-						type="url"
-						placeholder="https://example.com"
-						value={url}
-						onChange={(e) => setUrl(e.target.value)}
-						disabled={isPending}
-						required
-					/>
-					<Button type="submit" disabled={isPending}>
-						{isPending ? "Submitting..." : "Submit"}
-					</Button>
-				</form>
-			</CardContent>
+			{/* ... Card content remains the same ... */}
+			<form onSubmit={handleSubmit} className="flex items-center gap-4">
+				<Input
+					type="url"
+					placeholder="https://example.com"
+					value={url}
+					onChange={(e) => setUrl(e.target.value)}
+					disabled={isPending}
+					required
+				/>
+				<Button type="submit" disabled={isPending}>
+					{isPending ? "Submitting..." : "Submit"}
+				</Button>
+			</form>
 		</Card>
 	);
 }
