@@ -7,6 +7,7 @@ import { JobHistoryTable } from "./components/job-history-table";
 import { CrawlJob } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Session } from '@supabase/supabase-js';
+import { JobForm } from './components/job-form';
 
 export default function DashboardPage() {
 	const supabase = createClient();
@@ -75,7 +76,7 @@ export default function DashboardPage() {
 				</div>
 				<Button variant="outline">Sign Out</Button>
 			</div>
-
+            <JobForm/>
 			<JobHistoryTable initialJobs={jobs} />
 		</div>
 	);

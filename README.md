@@ -13,6 +13,9 @@ Before running the development server, you need to set up your Supabase environm
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# External API Configuration
+INTERNAL_API_KEY=your_external_api_key_here
 ```
 
 You can find these values in your [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/api).
