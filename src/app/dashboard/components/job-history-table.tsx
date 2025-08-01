@@ -1,122 +1,137 @@
 /** @format */
 
-"use client";
+'use client';
 
-import { CrawlJob } from "@/lib/types";
+import { CrawlJob } from '@/lib/types';
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	CardDescription,
-} from "@/components/ui/card";
-import { toast } from "sonner";
-import { deleteCrawlJob } from "@/lib/actions";
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+} from '@/components/ui/card';
+import { toast } from 'sonner';
+import { deleteCrawlJob } from '@/lib/actions';
+import { useRouter } from 'next/navigation';
 
 // CHANGE: Added a specific type for the component's props for clarity.
 type JobHistoryTableProps = {
-	/** The list of jobs to display, passed from the parent component. */
-	initialJobs: CrawlJob[];
-	onDeleteJob: (jobId: string) => void;
+    /** The list of jobs to display, passed from the parent component. */
+    initialJobs: CrawlJob[];
+    onDeleteJob: (jobId: string) => void;
 };
 
 // component renders initial job list from parent server component.
 export function JobHistoryTable({
-	initialJobs,
-	onDeleteJob,
+    initialJobs,
+    onDeleteJob,
 }: JobHistoryTableProps) {
-	const getBadgeVariant = (status: CrawlJob["status"]) => {
-		switch (status) {
-			case "completed":
-				return "default"; // green
-			case "pending":
-				return "secondary"; // gray
-			case "failed":
-				return "destructive"; // red
-			default:
-				return "outline";
-		}
-	};
+    const router = useRouter();
+    const getBadgeVariant = (status: CrawlJob['status']) => {
+        switch (status) {
+            case 'completed':
+                return 'default'; // green
+            case 'pending':
+                return 'secondary'; // gray
+            case 'failed':
+                return 'destructive'; // red
+            default:
+                return 'outline';
+        }
+    };
 
-	const handleDelete = async (jobId: string) => {
-		// Perform the optimistic UI update immediately.
-		onDeleteJob(jobId);
+    // The full delete logic is now self-contained here.
+    const handleDelete = async (jobId: string) => {
+        // 1. Immediately update the UI optimistically by calling the parent's function.
+        onDeleteJob(jobId);
 
-		// Call the server action in the background.
-		const result = await deleteCrawlJob(jobId);
-		if (result.success) {
-			toast.success(result.message);
-		} else {
-			toast.error(result.message);
-			// Here you could add logic to revert the optimistic update if needed.
-		}
-	};
+        // 2. Call the server action to perform the real deletion.
+        const result = await deleteCrawlJob(jobId);
 
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Job History</CardTitle>
-				<CardDescription>
-					A list of your 8 most recent crawl jobs. Pending jobs will update
-					automatically.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead className="w-[40%]">URL</TableHead>
-							<TableHead>Status</TableHead>
-							<TableHead>Created</TableHead>
-							<TableHead className="text-right">Actions</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{initialJobs.map((job) => (
-							<TableRow key={job.id}>
-								<TableCell className="font-medium truncate">
-									{job.target_url}
-								</TableCell>
-								<TableCell>
-									<Badge variant={getBadgeVariant(job.status)}>
-										{job.status}
-									</Badge>
-								</TableCell>
-								<TableCell>
-									{new Date(job.created_at).toLocaleString()}
-								</TableCell>
-								<TableCell className="text-right">
-									<Button variant="outline" size="sm" disabled>
-										Download
-									</Button>
-									<Button
-										variant="destructive"
-										size="sm"
-										onClick={() => handleDelete(job.id)}
-									>
-										Delete
-									</Button>
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-				{initialJobs.length === 0 && (
-					<div className="text-center p-8 text-muted-foreground">
-						You have no jobs yet.
-					</div>
-				)}
-			</CardContent>
-		</Card>
-	);
+        // 3. Show a toast message based on the outcome.
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
+            // If the delete failed, refresh the page to bring back the row
+            // that was optimistically removed.
+            router.refresh();
+        }
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Job History</CardTitle>
+                <CardDescription>
+                    A list of your 8 most recent crawl jobs. Pending jobs will
+                    update automatically.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className='w-[40%]'>URL</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Created</TableHead>
+                            <TableHead className='text-right'>
+                                Actions
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {initialJobs.map(job => (
+                            <TableRow key={job.id}>
+                                <TableCell className='font-medium truncate'>
+                                    {job.target_url}
+                                </TableCell>
+                                <TableCell>
+                                    <Badge
+                                        variant={getBadgeVariant(job.status)}
+                                    >
+                                        {job.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    {new Date(job.created_at).toLocaleString()}
+                                </TableCell>
+                                <TableCell className='text-right'>
+                                    <Button
+                                        variant='outline'
+                                        size='sm'
+                                        disabled
+                                    >
+                                        Download
+                                    </Button>
+                                    <Button
+                                        variant='destructive'
+                                        size='sm'
+                                        onClick={() => handleDelete(job.id)}
+                                    >
+                                        Delete
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                {initialJobs.length === 0 && (
+                    <div className='text-center p-8 text-muted-foreground'>
+                        You have no jobs yet.
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
 }
