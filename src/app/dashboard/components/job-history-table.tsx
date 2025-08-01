@@ -37,36 +37,16 @@ export function JobHistoryTable({
     initialJobs,
     onDeleteJob,
 }: JobHistoryTableProps) {
-    const router = useRouter();
     const getBadgeVariant = (status: CrawlJob['status']) => {
         switch (status) {
             case 'completed':
-                return 'default'; // green
+                return 'default'; // blue
             case 'pending':
                 return 'secondary'; // gray
             case 'failed':
-                return 'destructive'; // red
+                return 'destructive'; // orange
             default:
                 return 'outline';
-        }
-    };
-
-    // The full delete logic is now self-contained here.
-    const handleDelete = async (jobId: string) => {
-        // 1. Immediately update the UI optimistically by calling the parent's function.
-        onDeleteJob(jobId);
-
-        // 2. Call the server action to perform the real deletion.
-        const result = await deleteCrawlJob(jobId);
-
-        // 3. Show a toast message based on the outcome.
-        if (result.success) {
-            toast.success(result.message);
-        } else {
-            toast.error(result.message);
-            // If the delete failed, refresh the page to bring back the row
-            // that was optimistically removed.
-            router.refresh();
         }
     };
 

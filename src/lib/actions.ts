@@ -29,7 +29,7 @@ async function triggerAndTrackJob(
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${process.env.INTERNAL_API_KEY!}`,
                 },
-                body: JSON.stringify({ url: url, limit: 1 }),
+                body: JSON.stringify({ url: url, limit: 20 }),
             }
         );
 

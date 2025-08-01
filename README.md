@@ -4,23 +4,32 @@ A modern web application for managing and tracking web crawling jobs with user a
 
 ## 🚀 Features
 
-- **User Authentication**: Secure login system powered by Supabase Auth
-- **Job Management**: Create and track web crawling jobs
-- **Real-time Updates**: Optimistic UI updates for better user experience
+- **Secure Google Authentication**: Robust user login powered by Supabase Auth, using a secure, server-side OAuth 2.0 callback flow.
+- **Non-Blocking Job Submission**: Utilizes a "Fire and Forget" pattern with Next.js Server Actions, providing an instantaneous UI response when submitting new crawl jobs.
+- **Real-Time Status Polling**: The dashboard automatically polls for the status of pending jobs, updating the UI in real-time from `pending` to `completed` or `failed` without requiring a page refresh.
+- **Optimistic UI Updates**: Creating and deleting jobs feels instantaneous thanks to optimistic UI updates on the client-side.
+- **On-Demand Content Generation**: Completed jobs feature a "Generate LLMs.txt" button that displays the final text content in a dialog with a one-click "copy to clipboard" feature.
+- **Automatic Job Culling**: A PostgreSQL trigger automatically maintains the job history, keeping only the 8 most recent jobs per user to manage database size.
+- **Database-Level Security**: Leverages Supabase's Row Level Security (RLS) to ensure users can only ever access or modify their own jobs.
 - **Modern UI**: Built with Next.js 15, React 19, and Tailwind CSS
 - **Type Safety**: Full TypeScript support
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Responsive Design**: Desktop & Mobile Friendly!
 
 ## 🛠️ Tech Stack
 
 - **Framework**: [Next.js 15](https://nextjs.org/) with App Router
 - **Frontend**: [React 19](https://react.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Authentication**: [Supabase Auth](https://supabase.com/auth)
-- **Database**: [Supabase](https://supabase.com/)
+- **Styling**: **Tailwind CSS** with **ShadCN/UI** for components.
+- **Authentication & DB**: **Supabase** (Auth, Postgres, RLS)
 - **UI Components**: [Radix UI](https://www.radix-ui.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Notifications**: [Sonner](https://sonner.emilkowal.ski/)
+- **Notifications**: **Sonner** for toast notifications.
+- **Deployment**: **Vercel**
+
+### Architectural Patterns
+- **Server Actions**: Used for all backend mutations (`create`, `delete`, `retry`), providing secure, server-side logic that can be called directly from client components.
+- **Client-Side State Management**: The main dashboard is a client component that manages all application state, including the job list and polling logic, using React hooks (`useState`, `useEffect`, `useCallback`).
+- **Client/Server "Firewall"**: Supabase clients are separated into `lib/supabase.ts` (for the browser) and `lib/supabase-server.ts` to ensure server-only code is never bundled on the client.
 
 ## 📋 Prerequisites
 
@@ -63,35 +72,6 @@ INTERNAL_API_KEY=your_external_api_key_here
 ```
 
 You can find these values in your [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/api).
-
-### 4. Database Setup
-
-Make sure your Supabase project has the following table structure:
-
-```sql
--- Create the crawl_jobs table
-CREATE TABLE crawl_jobs (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  target_url TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  job_id TEXT,
-  result JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE crawl_jobs ENABLE ROW LEVEL SECURITY;
-
--- Create policy to allow users to see only their own jobs
-CREATE POLICY "Users can view own jobs" ON crawl_jobs
-  FOR SELECT USING (auth.uid() = user_id);
-
--- Create policy to allow users to insert their own jobs
-CREATE POLICY "Users can insert own jobs" ON crawl_jobs
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-```
 
 ### 5. Run the Development Server
 

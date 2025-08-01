@@ -14,6 +14,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Copy, X } from 'lucide-react';
+import { DialogDescription } from '@radix-ui/react-dialog';
 
 type JobActionsProps = {
     job: CrawlJob;
@@ -42,13 +43,22 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
             {job.status === 'completed' && job.result && (
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant='outline' size='sm'>
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            className='bg-primary text-primary-foreground hover:bg-transparent hover:text-primary hover:border-primary border-2 border-transparent'
+                        >
                             Generate LLMs.txt
                         </Button>
                     </DialogTrigger>
                     <DialogContent className='max-w-3xl h-3/4 flex flex-col'>
                         <DialogHeader className='flex-row justify-between items-center'>
-                            <DialogTitle>Generated llms.txt</DialogTitle>
+                            <DialogTitle>[NEW] LLMs.txt</DialogTitle>
+                            <DialogDescription className='mt-1'>
+                                Here is the generated content for{' '}
+                                {job.target_url}. You can copy it to your
+                                clipboard.
+                            </DialogDescription>
                             <div className='flex items-center space-x-2'>
                                 <Button
                                     variant='ghost'
@@ -58,7 +68,7 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                                     <Copy className='h-4 w-4' />
                                 </Button>
                                 <DialogClose asChild>
-                                        <X className='h-4 w-4' />
+                                    <X className='h-4 w-4' />
                                 </DialogClose>
                             </div>
                         </DialogHeader>
@@ -76,6 +86,7 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                 variant='destructive'
                 size='sm'
                 onClick={() => onDeleteJob(job.id)}
+                className='hover:bg-transparent hover:text-destructive hover:border-destructive border-2'
             >
                 Delete
             </Button>
