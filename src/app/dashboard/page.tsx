@@ -34,14 +34,7 @@ export default function DashboardPage() {
 
     // Call the server action and performs a hard redirect.
     const handleSignOut = async () => {
-        // 1. Call the client-side signOut method with the 'local' scope.
-        // This clears the session from browser storage.
-        await supabase.auth.signOut({ scope: 'local' });
-
-        // 2. Force a full page reload to the login page.
-        // This clears any in-memory state and ensures the login page
-        // loads fresh, without a cached session.
-        window.location.href = '/login';
+        await signOut();
     };
 
     // Effect for the initial session check and data load.
