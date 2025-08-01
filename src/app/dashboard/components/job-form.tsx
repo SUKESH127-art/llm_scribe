@@ -15,15 +15,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// 1. Update the props to accept the callback function
-export function JobForm({
-	onJobSubmitted,
-}: {
+type JobFormProps = {
+	/** Callback function invoked with the submitted URL on successful job creation. */
 	onJobSubmitted: (url: string) => void;
-}) {
+};
+
+/**
+ * A form for submitting new URLs to be crawled.
+ */
+export function JobForm({ onJobSubmitted }: JobFormProps) {
 	const [url, setUrl] = useState("");
 	const [isPending, setIsPending] = useState(false);
-	// 2. The router is no longer needed here.
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -37,32 +39,38 @@ export function JobForm({
 
 		if (result.success) {
 			toast.success(result.message);
-			// 3. Instead of refreshing, call the function from our parent component
-			onJobSubmitted(url);
+			// Instead of refreshing, call the function from our parent component
+			onJobSubmitted(url); // Optimistic update
 			setUrl("");
 		} else {
 			toast.error(result.message);
 		}
-
 		setIsPending(false);
 	};
 
 	return (
 		<Card className="mb-6">
-			{/* ... Card content remains the same ... */}
-			<form onSubmit={handleSubmit} className="flex items-center gap-4">
-				<Input
-					type="url"
-					placeholder="https://example.com"
-					value={url}
-					onChange={(e) => setUrl(e.target.value)}
-					disabled={isPending}
-					required
-				/>
-				<Button type="submit" disabled={isPending}>
-					{isPending ? "Submitting..." : "Submit"}
-				</Button>
-			</form>
+			<CardHeader>
+				<CardTitle>Create New Job</CardTitle>
+				<CardDescription>
+					Enter a URL to start the crawling process.
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={handleSubmit} className="flex items-center gap-4">
+					<Input
+						type="url"
+						placeholder="https://example.com"
+						value={url}
+						onChange={(e) => setUrl(e.target.value)}
+						disabled={isPending}
+						required
+					/>
+					<Button type="submit" disabled={isPending}>
+						{isPending ? "Submitting..." : "Submit"}
+					</Button>
+				</form>
+			</CardContent>
 		</Card>
 	);
 }

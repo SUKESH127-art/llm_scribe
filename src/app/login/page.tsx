@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 export default function LoginPage() {
 	const supabase = createClient();
 	const router = useRouter();
-	const [isChecking, setIsChecking] = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const handleGoogleLogin = async () => {
 		await supabase.auth.signInWithOAuth({
@@ -42,20 +42,17 @@ export default function LoginPage() {
 			} catch (error) {
 				console.error("Session check error:", error);
 			} finally {
-				setIsChecking(false);
+				setIsLoading(false);
 			}
 		};
 
 		checkSession();
 	}, [router, supabase]);
 
-	if (isChecking) {
+	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen bg-gray-50">
-				<div className="text-center">
-					<h2 className="text-2xl font-semibold mb-2">Loading...</h2>
-					<p className="text-muted-foreground">Please wait while we check your session.</p>
-				</div>
+			<div className="flex items-center justify-center min-h-screen">
+				<p className="text-muted-foreground">Loading...</p>
 			</div>
 		);
 	}

@@ -13,20 +13,52 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+	CardDescription,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { deleteCrawlJob } from "@/lib/actions";
 
-// This component receives the initial list of jobs from its parent server component.
-export function JobHistoryTable({ initialJobs }: { initialJobs: CrawlJob[] }) {
+// CHANGE: Added a specific type for the component's props for clarity.
+type JobHistoryTableProps = {
+	/** The list of jobs to display, passed from the parent component. */
+	initialJobs: CrawlJob[];
+	onDeleteJob: (jobId: string) => void;
+};
+
+// component renders initial job list from parent server component.
+export function JobHistoryTable({
+	initialJobs,
+	onDeleteJob,
+}: JobHistoryTableProps) {
 	const getBadgeVariant = (status: CrawlJob["status"]) => {
 		switch (status) {
 			case "completed":
-				return "default"; // Default is often green in ShadCN
+				return "default"; // green
 			case "pending":
-				return "secondary"; // Secondary is often gray/yellow
+				return "secondary"; // gray
 			case "failed":
-				return "destructive"; // Destructive is red
+				return "destructive"; // red
 			default:
 				return "outline";
+		}
+	};
+
+	const handleDelete = async (jobId: string) => {
+		// Perform the optimistic UI update immediately.
+		onDeleteJob(jobId);
+
+		// Call the server action in the background.
+		const result = await deleteCrawlJob(jobId);
+		if (result.success) {
+			toast.success(result.message);
+		} else {
+			toast.error(result.message);
+			// Here you could add logic to revert the optimistic update if needed.
 		}
 	};
 
@@ -34,7 +66,10 @@ export function JobHistoryTable({ initialJobs }: { initialJobs: CrawlJob[] }) {
 		<Card>
 			<CardHeader>
 				<CardTitle>Job History</CardTitle>
-				<CardDescription>A list of your recent crawl jobs.</CardDescription>
+				<CardDescription>
+					A list of your 8 most recent crawl jobs. Pending jobs will update
+					automatically.
+				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<Table>
@@ -61,9 +96,15 @@ export function JobHistoryTable({ initialJobs }: { initialJobs: CrawlJob[] }) {
 									{new Date(job.created_at).toLocaleString()}
 								</TableCell>
 								<TableCell className="text-right">
-									{/* We will add real functionality to these buttons later */}
 									<Button variant="outline" size="sm" disabled>
 										Download
+									</Button>
+									<Button
+										variant="destructive"
+										size="sm"
+										onClick={() => handleDelete(job.id)}
+									>
+										Delete
 									</Button>
 								</TableCell>
 							</TableRow>

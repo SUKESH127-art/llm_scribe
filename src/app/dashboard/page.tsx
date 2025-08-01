@@ -4,13 +4,13 @@
 
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { JobHistoryTable } from "./components/job-history-table";
+import { JobForm } from "./components/job-form";
 import { CrawlJob } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Session } from "@supabase/supabase-js";
-import { JobForm } from "./components/job-form";
-import { v4 as uuidv4 } from "uuid"; // 1. Import a UUID library to create temporary IDs
+import { checkJobStatus, signOut } from "@/lib/actions";
 
 export default function DashboardPage() {
 	const supabase = createClient();
@@ -19,8 +19,23 @@ export default function DashboardPage() {
 	const [jobs, setJobs] = useState<CrawlJob[]>([]);
 	const [loading, setLoading] = useState(true);
 
+	// Extracted job fetching into a memoized useCallback function for reuse.
+	const fetchJobs = useCallback(async () => {
+		const { data, error } = await supabase
+			.from("crawl_jobs")
+			.select("*")
+			.order("created_at", { ascending: false });
+
+		if (error) {
+			console.error("Error fetching jobs:", error);
+		} else {
+			setJobs(data || []);
+		}
+	}, [supabase]);
+
+	// Effect for the initial session check and data load.
 	useEffect(() => {
-		const checkSession = async () => {
+		const initializeDashboard = async () => {
 			try {
 				const {
 					data: { session },
@@ -32,34 +47,46 @@ export default function DashboardPage() {
 				}
 
 				setSession(session);
-
-				// Fetch jobs for the current user
-				const { data: jobsData, error } = await supabase
-					.from("crawl_jobs")
-					.select("*")
-					.order("created_at", { ascending: false });
-
-				if (error) {
-					console.error("Error fetching jobs:", error);
-				} else {
-					setJobs(jobsData || []);
-				}
+				await fetchJobs();
 			} catch (error) {
-				console.error("Session check error:", error);
+				console.error("Initialization error:", error);
 				router.replace("/login");
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		checkSession();
-	}, [router, supabase]);
+		initializeDashboard();
+	}, [router, supabase, fetchJobs]);
 
-	// 2. Define the callback function to handle the optimistic update
+	// This effect is responsible for the real-time status updates.
+	useEffect(() => {
+		const hasPendingJobs = jobs.some((job) => job.status === "pending");
+		if (!hasPendingJobs || loading) {
+			return;
+		}
+
+		const interval = setInterval(async () => {
+			const pendingJobs = jobs.filter((job) => job.status === "pending");
+			if (pendingJobs.length === 0) {
+				clearInterval(interval);
+				return;
+			}
+
+			console.log(`Polling ${pendingJobs.length} pending job(s)...`);
+			await Promise.all(pendingJobs.map((job) => checkJobStatus(job)));
+
+			await fetchJobs();
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [jobs, fetchJobs, loading]);
+
+	// Callback function for optimistic update
 	const handleJobSubmitted = (url: string) => {
 		// Create a temporary, "fake" job object.
 		const optimisticJob: CrawlJob = {
-			id: uuidv4(), // A unique temporary ID
+			id: `optimistic-${Date.now()}`,
 			user_id: session!.user.id,
 			target_url: url,
 			status: "pending",
@@ -68,20 +95,25 @@ export default function DashboardPage() {
 			result: null,
 		};
 
-		// 3. Prepend it to the jobs list in our state.
-		//    This will instantly update the UI.
+		// Prepend it to jobs list in our state to instantly update UI.
 		setJobs((currentJobs) => [optimisticJob, ...currentJobs]);
+	};
+
+	// Add handler function for the sign-out action.
+	const handleSignOut = async () => {
+		await signOut();
+	};
+
+	// Handler for the optimistic deletion.
+	const handleDeleteJob = (jobId: string) => {
+		// Filter out the job with the matching ID to instantly update the UI.
+		setJobs((currentJobs) => currentJobs.filter((job) => job.id !== jobId));
 	};
 
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-center">
-					<h2 className="text-2xl font-semibold mb-2">Loading...</h2>
-					<p className="text-muted-foreground">
-						Please wait while we load your dashboard.
-					</p>
-				</div>
+				<p className="text-muted-foreground">Loading dashboard...</p>
 			</div>
 		);
 	}
@@ -92,17 +124,21 @@ export default function DashboardPage() {
 
 	return (
 		<div className="container mx-auto p-4 md:p-8">
-			<div className="flex justify-between items-center mb-6">
+			<header className="flex justify-between items-center mb-6">
 				<div>
 					<h1 className="text-3xl font-bold">Dashboard</h1>
 					<p className="text-muted-foreground">
-						Welcome back, {session.user.email}
+						Welcome back, {session?.user.email}
 					</p>
 				</div>
-				<Button variant="outline">Sign Out</Button>
-			</div>
-			<JobForm onJobSubmitted={handleJobSubmitted} />
-			<JobHistoryTable initialJobs={jobs} />
+				<Button onClick={handleSignOut} variant="outline">
+					Sign Out
+				</Button>
+			</header>
+			<main>
+				<JobForm onJobSubmitted={handleJobSubmitted} />
+				<JobHistoryTable initialJobs={jobs} onDeleteJob={handleDeleteJob} />
+			</main>
 		</div>
 	);
 }
