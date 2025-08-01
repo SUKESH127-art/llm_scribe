@@ -41,11 +41,31 @@ async function triggerAndTrackJob(
             );
         }
 
-        // Success: Update our job with the external ID from the crawler service.
-        await supabase
-            .from('crawl_jobs')
-            .update({ job_id: apiData.job_id })
-            .eq('id', jobId);
+        // --- NEW: Handle both fast and slow path responses ---
+        if (apiData.status === 'completed_immediately') {
+            // FAST PATH: The job is already done.
+            console.log(
+                `Fast path successful for job ${jobId}. Updating DB directly.`
+            );
+            await supabase
+                .from('crawl_jobs')
+                .update({
+                    status: 'completed',
+                    result: apiData.result, // Save the instant result
+                    job_id: null, // Ensure job_id is null
+                })
+                .eq('id', jobId);
+        } else {
+            // SLOW PATH: A crawl job was started.
+            console.log(
+                `Slow path initiated for job ${jobId}. External job_id: ${apiData.job_id}`
+            );
+            // Success: Update our job with the external ID from the crawler service.
+            await supabase
+                .from('crawl_jobs')
+                .update({ job_id: apiData.job_id }) // Save the job_id for polling
+                .eq('id', jobId);
+        }
     } catch (error) {
         console.error(
             `Background job trigger failed for Supabase job ID ${jobId}:`,

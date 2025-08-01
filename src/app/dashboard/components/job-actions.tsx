@@ -48,17 +48,12 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                             size='sm'
                             className='bg-primary text-primary-foreground hover:bg-transparent hover:text-primary hover:border-primary border-2 border-transparent'
                         >
-                            Generate LLMs.txt
+                            Create LLMs.txt
                         </Button>
                     </DialogTrigger>
                     <DialogContent className='max-w-3xl h-3/4 flex flex-col'>
                         <DialogHeader className='flex-row justify-between items-center'>
-                            <DialogTitle>[NEW] LLMs.txt</DialogTitle>
-                            <DialogDescription className='mt-1'>
-                                Here is the generated content for{' '}
-                                {job.target_url}. You can copy it to your
-                                clipboard.
-                            </DialogDescription>
+                            <DialogTitle>LLMs.txt</DialogTitle>
                             <div className='flex items-center space-x-2'>
                                 <Button
                                     variant='ghost'
