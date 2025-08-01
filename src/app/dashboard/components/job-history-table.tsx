@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { deleteCrawlJob } from '@/lib/actions';
 import { useRouter } from 'next/navigation';
+import { JobActions } from './job-actions';
 
 // CHANGE: Added a specific type for the component's props for clarity.
 type JobHistoryTableProps = {
@@ -107,20 +108,10 @@ export function JobHistoryTable({
                                     {new Date(job.created_at).toLocaleString()}
                                 </TableCell>
                                 <TableCell className='text-right'>
-                                    <Button
-                                        variant='outline'
-                                        size='sm'
-                                        disabled
-                                    >
-                                        Download
-                                    </Button>
-                                    <Button
-                                        variant='destructive'
-                                        size='sm'
-                                        onClick={() => handleDelete(job.id)}
-                                    >
-                                        Delete
-                                    </Button>
+                                    <JobActions
+                                        job={job}
+                                        onDeleteJob={onDeleteJob}
+                                    />
                                 </TableCell>
                             </TableRow>
                         ))}
