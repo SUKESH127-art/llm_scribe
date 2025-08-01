@@ -1,17 +1,10 @@
-/**
- * @format
- * @file This file is for CLIENT-SIDE Supabase access only. It initializes and exports a Supabase client instance safe for use in browser environments.
- */
-
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient } from '@supabase/ssr';
 
 /**
- * Creates a new Supabase client for use in Client Components.
- * @returns A Supabase client instance.
+ * This is the singleton instance of the Supabase client for the browser.
+ * It is created once and reused throughout the client-side of the application.
  */
-export function createClient() {
-	return createBrowserClient(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-	);
-}
+export const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);

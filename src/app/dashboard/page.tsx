@@ -2,7 +2,7 @@
 
 'use client';
 
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { JobHistoryTable } from './components/job-history-table';
@@ -13,7 +13,6 @@ import { Session } from '@supabase/supabase-js';
 import { checkJobStatus, signOut } from '@/lib/actions';
 
 export default function DashboardPage() {
-    const supabase = createClient();
     const router = useRouter();
     const [session, setSession] = useState<Session | null>(null);
     const [jobs, setJobs] = useState<CrawlJob[]>([]);
@@ -31,7 +30,19 @@ export default function DashboardPage() {
         } else {
             setJobs(data || []);
         }
-    }, [supabase]);
+    }, []);
+
+    // Call the server action and performs a hard redirect.
+    const handleSignOut = async () => {
+        // 1. Call the client-side signOut method with the 'local' scope.
+        // This clears the session from browser storage.
+        await supabase.auth.signOut({ scope: 'local' });
+
+        // 2. Force a full page reload to the login page.
+        // This clears any in-memory state and ensures the login page
+        // loads fresh, without a cached session.
+        window.location.href = '/login';
+    };
 
     // Effect for the initial session check and data load.
     useEffect(() => {
@@ -102,11 +113,6 @@ export default function DashboardPage() {
     // CHANGE: This function is now simpler. It only handles the optimistic UI update.
     const handleDeleteJob = (jobId: string) => {
         setJobs(currentJobs => currentJobs.filter(job => job.id !== jobId));
-    };
-
-    // Add handler function for the sign-out action.
-    const handleSignOut = async () => {
-        await signOut();
     };
 
     if (loading) {

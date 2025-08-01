@@ -233,7 +233,8 @@ export async function deleteCrawlJob(jobId: string) {
  * This function logs out the authenticated user from Supabase and navigates them to the login screen.
  */
 export async function signOut() {
-    const supabase = createServerSupabaseClient();
-    (await supabase).auth.signOut();
-    redirect('/login');
+    const supabase = await createServerSupabaseClient();
+    await supabase.auth.signOut();
+    // This redirect is crucial for clearing the auth cookie.
+    return redirect('/login');
 }

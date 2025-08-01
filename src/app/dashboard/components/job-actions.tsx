@@ -58,9 +58,7 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                                     <Copy className='h-4 w-4' />
                                 </Button>
                                 <DialogClose asChild>
-                                    
                                         <X className='h-4 w-4' />
-                                    
                                 </DialogClose>
                             </div>
                         </DialogHeader>

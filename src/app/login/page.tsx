@@ -2,7 +2,7 @@
 
 "use client";
 
-import { createClient } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-	const supabase = createClient();
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(true);
 
