@@ -1,6 +1,6 @@
 # LLM Scribe
 
-A modern web application for managing and tracking web crawling jobs with user authentication and real-time status updates.
+A modern web application for managing and tracking web crawling jobs with user authentication, real-time status updates, and intelligent content change detection.
 
 ## 🚀 Features
 
@@ -11,6 +11,8 @@ A modern web application for managing and tracking web crawling jobs with user a
 - **On-Demand Content Generation**: Completed jobs feature a "Generate LLMs.txt" button that displays the final text content in a dialog with a one-click "copy to clipboard" feature.
 - **Automatic Job Culling**: A PostgreSQL trigger automatically maintains the job history, keeping only the 8 most recent jobs per user to manage database size.
 - **Database-Level Security**: Leverages Supabase's Row Level Security (RLS) to ensure users can only ever access or modify their own jobs.
+- **Intelligent Content Change Detection**: Advanced cron job system that monitors websites for content changes using HTTP headers (ETag, Last-Modified) for efficient detection.
+- **Production-Ready Cron Jobs**: Secure, rate-limited, and timeout-protected API endpoints for automated site monitoring.
 - **Modern UI**: Built with Next.js 15, React 19, and Tailwind CSS
 - **Type Safety**: Full TypeScript support
 - **Responsive Design**: Desktop & Mobile Friendly!
@@ -30,6 +32,7 @@ A modern web application for managing and tracking web crawling jobs with user a
 - **Server Actions**: Used for all backend mutations (`create`, `delete`, `retry`), providing secure, server-side logic that can be called directly from client components.
 - **Client-Side State Management**: The main dashboard is a client component that manages all application state, including the job list and polling logic, using React hooks (`useState`, `useEffect`, `useCallback`).
 - **Client/Server "Firewall"**: Supabase clients are separated into `lib/supabase.ts` (for the browser) and `lib/supabase-server.ts` to ensure server-only code is never bundled on the client.
+- **Content Change Detection**: Uses HTTP HEAD requests with ETag and Last-Modified headers for efficient content change monitoring without downloading full content.
 
 ## 📋 Prerequisites
 
@@ -66,12 +69,32 @@ Create a `.env.local` file in the root directory and add your Supabase credentia
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
 
 # External API Configuration (if needed)
 INTERNAL_API_KEY=your_external_api_key_here
+
+# CRON Job Security
+CRON_SECRET=your_secure_random_string_here
 ```
 
 You can find these values in your [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/api).
+
+**Important**: Generate a secure random string for `CRON_SECRET` (at least 32 characters). You can use:
+```bash
+openssl rand -base64 32
+```
+
+### 4. Database Setup
+
+Ensure your Supabase database has the following tables and functions:
+
+#### Tables
+- `crawl_jobs` - Stores job information with columns for URL, status, timestamps, and HTTP headers
+- `sites` - (Optional) For basic uptime monitoring
+
+#### Functions
+- `get_latest_job_for_each_url()` - Returns the most recent job for each unique URL
 
 ### 5. Run the Development Server
 
@@ -87,12 +110,62 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
+## 🔄 Cron Job System
+
+### Content Change Detection
+
+The application includes a sophisticated cron job system that monitors websites for content changes:
+
+**Endpoint**: `GET /api/cron/check-sites`
+
+**Features**:
+- **Efficient Monitoring**: Uses HTTP HEAD requests instead of full content downloads
+- **Smart Detection**: Compares ETag and Last-Modified headers to detect changes
+- **Rate Limiting**: 200ms delay between requests to be respectful to target servers
+- **Timeout Protection**: 15-second timeout per request to prevent hanging
+- **Concurrent Processing**: Batch database updates for better performance
+- **Robust Error Handling**: Distinguishes between timeout errors and other failures
+
+### Testing the Cron Job
+
+```bash
+# Test with valid authentication
+curl -X GET http://localhost:3000/api/cron/check-sites \
+-H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Test with invalid authentication
+curl -X GET http://localhost:3000/api/cron/check-sites \
+-H "Authorization: Bearer FAKE_SECRET"
+```
+
+### Setting Up Automated Cron Jobs
+
+You can set up automated monitoring using:
+- **Vercel Cron Jobs** (recommended for Vercel deployments)
+- **GitHub Actions**
+- **External cron services** (cron-job.org, EasyCron, etc.)
+
+Example Vercel cron configuration in `vercel.json`:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-sites",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}
+```
+
 ## 📁 Project Structure
 
 ```
 llm_scribe/
 ├── src/
 │   ├── app/                    # Next.js App Router
+│   │   ├── api/               # API routes
+│   │   │   └── cron/         # Cron job endpoints
+│   │   │       └── check-sites/ # Content change detection
 │   │   ├── auth/              # Authentication pages
 │   │   ├── dashboard/         # Main dashboard
 │   │   │   └── components/    # Dashboard-specific components
@@ -118,6 +191,7 @@ llm_scribe/
 2. **Create Jobs**: Submit URLs for web crawling through the job form
 3. **Track Progress**: Monitor job status and results in the job history table
 4. **Real-time Updates**: See immediate feedback when jobs are submitted
+5. **Content Monitoring**: Automated cron jobs detect when sites have changed content
 
 ## 🚀 Deployment
 
@@ -128,7 +202,8 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 1. Push your code to GitHub
 2. Import your project to Vercel
 3. Add your environment variables in Vercel dashboard
-4. Deploy!
+4. Configure cron jobs in `vercel.json`
+5. Deploy!
 
 ### Environment Variables for Production
 
@@ -136,7 +211,17 @@ Make sure to set the following environment variables in your production environm
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 - `INTERNAL_API_KEY` (if needed)
+- `CRON_SECRET` (secure random string)
+
+## 🔒 Security Features
+
+- **Row Level Security (RLS)**: Database-level security ensuring users only access their own data
+- **Secure Authentication**: OAuth 2.0 flow with server-side validation
+- **Cron Job Security**: Bearer token authentication for automated endpoints
+- **Rate Limiting**: Built-in delays to prevent overwhelming target servers
+- **Timeout Protection**: Prevents hanging requests and resource exhaustion
 
 ## 🤝 Contributing
 
@@ -164,3 +249,4 @@ If you encounter any issues or have questions, please:
 - [Supabase Documentation](https://supabase.com/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [React Documentation](https://react.dev/)
+- [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs)
