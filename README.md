@@ -1,321 +1,192 @@
 # LLM Scribe
 
-A modern web application for managing and tracking web crawling jobs with user authentication, real-time status updates, and intelligent content change detection.
-
-## 🚀 Features
-
-- **Secure Google Authentication**: Robust user login powered by Supabase Auth, using a secure, server-side OAuth 2.0 callback flow.
-- **Non-Blocking Job Submission**: Utilizes a "Fire and Forget" pattern with Next.js Server Actions, providing an instantaneous UI response when submitting new crawl jobs.
-- **Real-Time Status Polling**: The dashboard automatically polls for the status of pending jobs, updating the UI in real-time from `pending` to `completed` or `failed` without requiring a page refresh.
-- **Optimistic UI Updates**: Creating and deleting jobs feels instantaneous thanks to optimistic UI updates on the client-side.
-- **On-Demand Content Generation**: Completed jobs feature a "Generate LLMs.txt" button that displays the final text content in a dialog with a one-click "copy to clipboard" feature.
-- **Automatic Job Culling**: A PostgreSQL trigger automatically maintains the job history, keeping only the 8 most recent jobs per user to manage database size.
-- **Database-Level Security**: Leverages Supabase's Row Level Security (RLS) to ensure users can only ever access or modify their own jobs.
-- **Intelligent Content Change Detection**: Advanced cron job system that monitors websites for content changes using HTTP headers (ETag, Last-Modified) for efficient detection.
-- **Production-Ready Cron Jobs**: Secure, rate-limited, and timeout-protected API endpoints for automated site monitoring.
-- **Stale Job Management**: Automatic detection and re-crawling of jobs when content changes are detected.
-- **Modern UI**: Built with Next.js 15, React 19, and Tailwind CSS
-- **Type Safety**: Full TypeScript support
-- **Responsive Design**: Desktop & Mobile Friendly!
-
-## 🛠️ Tech Stack
-
-- **Framework**: [Next.js 15](https://nextjs.org/) with App Router
-- **Frontend**: [React 19](https://react.dev/)
-- **Styling**: **Tailwind CSS** with **ShadCN/UI** for components.
-- **Authentication & DB**: **Supabase** (Auth, Postgres, RLS)
-- **UI Components**: [Radix UI](https://www.radix-ui.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Notifications**: **Sonner** for toast notifications.
-- **Deployment**: **Vercel**
-
-### Architectural Patterns
-- **Server Actions**: Used for all backend mutations (`create`, `delete`, `retry`), providing secure, server-side logic that can be called directly from client components.
-- **Client-Side State Management**: The main dashboard is a client component that manages all application state, including the job list and polling logic, using React hooks (`useState`, `useEffect`, `useCallback`).
-- **Client/Server "Firewall"**: Supabase clients are separated into `lib/supabase.ts` (for the browser) and `lib/supabase-server.ts` to ensure server-only code is never bundled on the client.
-- **Content Change Detection**: Uses HTTP HEAD requests with ETag and Last-Modified headers for efficient content change monitoring without downloading full content.
-- **Stale Job Handling**: Conditional UI rendering and automatic re-crawling for jobs with outdated content.
-
-## 📋 Prerequisites
-
-- Node.js 18+ 
-- npm, yarn, pnpm, or bun
-- Supabase account and project
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/SUKESH127-art/llm_scribe.git
-cd llm_scribe
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
-```
-
-### 3. Environment Setup
-
-Create a `.env.local` file in the root directory and add your Supabase credentials:
-
-```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
-
-# External API Configuration (if needed)
-INTERNAL_API_KEY=your_external_api_key_here
-
-# CRON Job Security
-CRON_SECRET=your_secure_random_string_here
-```
-
-You can find these values in your [Supabase dashboard](https://supabase.com/dashboard/project/_/settings/api).
-
-**Important**: Generate a secure random string for `CRON_SECRET` (at least 32 characters). You can use:
-```bash
-openssl rand -base64 32
-```
-
-### 4. Database Setup
-
-Ensure your Supabase database has the following tables and functions:
-
-#### Tables
-- `crawl_jobs` - Stores job information with columns for URL, status, timestamps, and HTTP headers
-
-**Required columns:**
-```sql
-- id (uuid, primary key)
-- user_id (uuid, foreign key to auth.users)
-- target_url (text)
-- job_id (text, nullable)
-- status (text: 'pending', 'completed', 'failed')
-- result (text, nullable)
-- created_at (timestamp with time zone)
-- is_stale (boolean, default: false)
-- etag_header (text, nullable)
-- last_modified_header (text, nullable)
-```
-
-#### Functions
-- `get_latest_job_for_each_url()` - Returns the most recent job for each unique URL
-
-### 5. Run the Development Server
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
-
-## 🔄 Cron Job System
-
-### Content Change Detection
-
-The application includes a sophisticated cron job system that monitors websites for content changes:
-
-**Endpoint**: `GET /api/cron/check-sites`
-
-**Features**:
-- **Efficient Monitoring**: Uses HTTP HEAD requests instead of full content downloads
-- **Smart Detection**: Compares ETag and Last-Modified headers to detect changes
-- **Rate Limiting**: 200ms delay between requests to be respectful to target servers
-- **Timeout Protection**: 15-second timeout per request to prevent hanging
-- **Concurrent Processing**: Batch database updates for better performance
-- **Robust Error Handling**: Distinguishes between timeout errors and other failures
-- **Header Storage**: Automatically stores ETag and Last-Modified headers for future comparisons
-
-### Testing the Cron Job
-
-```bash
-# Test with valid authentication
-curl -X GET http://localhost:3000/api/cron/check-sites \
--H "Authorization: Bearer YOUR_CRON_SECRET"
-
-# Test with invalid authentication
-curl -X GET http://localhost:3000/api/cron/check-sites \
--H "Authorization: Bearer FAKE_SECRET"
-```
-
-### Setting Up Automated Cron Jobs
-
-You can set up automated monitoring using:
-- **Vercel Cron Jobs** (recommended for Vercel deployments)
-- **GitHub Actions**
-- **External cron services** (cron-job.org, EasyCron, etc.)
-
-Example Vercel cron configuration in `vercel.json`:
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/check-sites",
-      "schedule": "0 */6 * * *"
-    }
-  ]
-}
-```
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-1. **Authentication Flow**
-   - Visit `/` → Redirected to `/login`
-   - Sign in with Google → Redirected to `/dashboard`
-
-2. **Job Management**
-   - Create new job → Appears immediately with "pending" status
-   - Wait for completion → Status changes to "completed" or "failed"
-   - Delete job → Job disappears, success toast appears
-
-3. **Stale Job Detection**
-   - Manually set `is_stale: true` in database for a completed job
-   - Refresh dashboard → Job shows "Re-crawl" button instead of "Create LLMs.txt"
-   - Click "Re-crawl" → New pending job created, original deleted
-
-4. **Content Change Detection**
-   - Run cron job manually → Jobs get `etag_header` and `last_modified_header` values
-   - When websites change → Jobs automatically marked as `is_stale: true`
-
-### Automated Testing
-
-```bash
-# Test cron job authentication
-curl -X GET http://localhost:3000/api/cron/check-sites \
--H "Authorization: Bearer YOUR_CRON_SECRET"
-
-# Test build process
-npm run build
-
-# Test linting
-npm run lint
-```
-
-## 📁 Project Structure
-
-```
-llm_scribe/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/               # API routes
-│   │   │   └── cron/         # Cron job endpoints
-│   │   │       └── check-sites/ # Content change detection
-│   │   ├── auth/              # Authentication pages
-│   │   ├── dashboard/         # Main dashboard
-│   │   │   └── components/    # Dashboard-specific components
-│   │   ├── login/             # Login page
-│   │   └── layout.tsx         # Root layout
-│   ├── components/
-│   │   └── ui/                # Reusable UI components
-│   └── lib/                   # Utility functions and configurations
-├── public/                    # Static assets
-├── vercel.json               # Vercel deployment configuration
-└── package.json
-```
-
-## 🔧 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-## 🎯 Usage
-
-1. **Authentication**: Users must sign in to access the dashboard
-2. **Create Jobs**: Submit URLs for web crawling through the job form
-3. **Track Progress**: Monitor job status and results in the job history table
-4. **Real-time Updates**: See immediate feedback when jobs are submitted
-5. **Content Monitoring**: Automated cron jobs detect when sites have changed content
-6. **Stale Job Management**: Re-crawl jobs when content changes are detected
-
-## 🚀 Deployment
-
-### Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
-
-1. Push your code to GitHub
-2. Import your project to Vercel
-3. Add your environment variables in Vercel dashboard
-4. Configure cron jobs in `vercel.json`
-5. Deploy!
-
-### Environment Variables for Production
-
-Make sure to set the following environment variables in your production environment:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `INTERNAL_API_KEY` (if needed)
-- `CRON_SECRET` (secure random string)
-
-## 🔒 Security Features
-
-- **Row Level Security (RLS)**: Database-level security ensuring users only access their own data
-- **Secure Authentication**: OAuth 2.0 flow with server-side validation
-- **Cron Job Security**: Bearer token authentication for automated endpoints
-- **Rate Limiting**: Built-in delays to prevent overwhelming target servers
-- **Timeout Protection**: Prevents hanging requests and resource exhaustion
-- **Input Validation**: Server-side validation for all user inputs
-
-## 🐛 Recent Fixes
-
-### v1.1.0 (Latest)
-- ✅ **Fixed Database Schema**: Added missing fields (`etag_header`, `last_modified_header`, `idx`) to TypeScript types
-- ✅ **Fixed Delete Functionality**: Jobs now delete permanently from database
-- ✅ **Enhanced Cron Job**: Now stores HTTP headers for proper change detection
-- ✅ **Improved Job Creation**: Added `is_stale` field initialization
-- ✅ **Stale Job UI**: Conditional rendering for "Re-crawl" vs "Create LLMs.txt" buttons
-- ✅ **Better Error Handling**: Consistent JSON responses and proper error messages
-- ✅ **Build Issues**: Resolved all TypeScript compilation errors
-
-### Known Issues
-- None currently identified
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-If you encounter any issues or have questions, please:
-
-1. Check the [Issues](https://github.com/SUKESH127-art/llm_scribe/issues) page
-2. Create a new issue if your problem isn't already addressed
-3. Contact the maintainers
-
-## 🔗 Links
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [React Documentation](https://react.dev/)
-- [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs)
+**Intelligent Web Content Monitoring & LLMs.txt Generation Platform**
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-brightgreen)](https://llm-scribe.vercel.app/)
+[![Tech Stack](https://img.shields.io/badge/Stack-Next.js%2015%20%7C%20React%2019%20%7C%20Supabase-blue)](https://llm-scribe.vercel.app/)
+[![Deployment](https://img.shields.io/badge/Deployed%20on-Vercel-purple)](https://llm-scribe.vercel.app/)
+
+> **Transform any website into structured LLMs.txt content with intelligent change detection and automated monitoring.**
+
+## 🎯 **What is LLM Scribe?**
+
+LLM Scribe is a production-ready web application that automatically crawls websites, generates LLMs.txt content, and intelligently monitors for content changes. Built for teams that need reliable, scalable web content processing with enterprise-grade security and real-time monitoring.
+
+**🔗 [Try it live now](https://llm-scribe.vercel.app/)**
+
+---
+
+## 🚀 **Core Capabilities**
+
+### **1. Intelligent Web Crawling**
+- **Non-blocking job submission** - Submit URLs and get instant feedback
+- **Real-time status tracking** - Watch jobs progress from pending → completed/failed
+- **Automatic content extraction** - Generate LLMs.txt content from any website
+- **Optimistic UI updates** - Seamless user experience with instant visual feedback
+
+### **2. Smart Content Change Detection**
+- **HTTP header monitoring** - Uses ETag and Last-Modified headers for efficient detection
+- **Automated cron jobs** - Runs every 6 hours to detect content changes
+- **Stale content management** - Automatically flags outdated content for re-crawling
+- **Rate-limited requests** - Respectful to target servers with built-in delays
+
+### **3. Enterprise Security & Compliance**
+- **Google OAuth 2.0 authentication** - Secure, enterprise-grade login
+- **Row Level Security (RLS)** - Database-level isolation ensuring users only access their data
+- **Server-side validation** - All inputs validated on the server
+- **Secure API endpoints** - Bearer token authentication for automated processes
+
+### **4. Production-Ready Architecture**
+- **Server Actions** - Secure, server-side logic with client-side calling
+- **Real-time polling** - Automatic status updates without page refreshes
+- **Error handling** - Comprehensive error management with user-friendly messages
+- **Scalable design** - Built to handle multiple concurrent users and jobs
+
+---
+
+## 🎨 **User Experience**
+
+### **Dashboard Overview**
+- **Clean, modern interface** built with Tailwind CSS and ShadCN/UI
+- **Responsive design** - Works perfectly on desktop and mobile
+- **Real-time updates** - See job status changes as they happen
+- **One-click operations** - Copy LLMs.txt content to clipboard instantly
+
+### **Job Management**
+- **Create jobs** - Submit any URL for processing
+- **Track progress** - Real-time status updates with visual indicators
+- **Manage history** - View your 8 most recent jobs with full details
+- **Handle failures** - Retry failed jobs with a single click
+
+### **Content Generation**
+- **LLMs.txt creation** - Generate structured content from any website
+- **Preview functionality** - View content before copying
+- **Copy to clipboard** - One-click content extraction
+- **Stale content detection** - Automatic re-crawling when content changes
+
+---
+
+## 🏗️ **Technical Architecture**
+
+### **Modern Tech Stack**
+- **Frontend**: Next.js 15 + React 19 + TypeScript
+- **Styling**: Tailwind CSS + ShadCN/UI components
+- **Backend**: Next.js Server Actions + Supabase
+- **Database**: PostgreSQL with Row Level Security
+- **Authentication**: Supabase Auth with Google OAuth
+- **Deployment**: Vercel with automatic CI/CD
+
+### **Key Design Patterns**
+- **Server Actions** - Secure backend operations
+- **Optimistic Updates** - Instant UI feedback
+- **Real-time Polling** - Automatic status synchronization
+- **Content Change Detection** - HTTP header-based monitoring
+- **Stale Job Management** - Intelligent re-crawling system
+
+---
+
+## 📊 **Performance & Scalability**
+
+### **Efficient Processing**
+- **Non-blocking operations** - Jobs don't block the UI
+- **Optimistic updates** - Instant visual feedback
+- **Real-time polling** - Automatic status synchronization
+- **Batch processing** - Efficient database operations
+
+### **Resource Management**
+- **Automatic job culling** - Keeps only 8 most recent jobs per user
+- **Rate limiting** - Respectful to target servers
+- **Timeout protection** - Prevents hanging requests
+- **Error recovery** - Robust error handling and recovery
+
+---
+
+## 🔒 **Security & Compliance**
+
+### **Data Protection**
+- **Row Level Security (RLS)** - Database-level data isolation
+- **User authentication** - Secure Google OAuth 2.0 flow
+- **Input validation** - Server-side validation for all inputs
+- **Secure API endpoints** - Bearer token authentication
+
+### **Privacy & Compliance**
+- **User data isolation** - Users can only access their own data
+- **Secure session management** - Proper session handling and cleanup
+- **Audit trails** - Complete job history and status tracking
+- **GDPR ready** - User data control and deletion capabilities
+
+---
+
+## 🚀 **Getting Started**
+
+### **Live Demo**
+Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to see LLM Scribe in action.
+
+### **Key Features to Try**
+1. **Authentication** - Sign in with your Google account
+2. **Job Creation** - Submit a URL for processing
+3. **Real-time Tracking** - Watch the job progress in real-time
+4. **Content Generation** - Generate and copy LLMs.txt content
+5. **Change Detection** - See how stale content is automatically detected
+
+---
+
+## 📈 **Business Value**
+
+### **Time Savings**
+- **Automated monitoring** - No manual checking required
+- **Instant content generation** - Get LLMs.txt content in seconds
+- **Real-time updates** - Always know the latest status
+- **One-click operations** - Minimal user interaction required
+
+### **Cost Efficiency**
+- **No infrastructure management** - Fully managed deployment
+- **Automatic scaling** - Handles traffic spikes automatically
+- **Efficient resource usage** - Optimized for performance
+- **Reduced manual work** - Automate repetitive tasks
+
+### **Quality Assurance**
+- **Consistent output** - Standardized LLMs.txt format
+- **Error handling** - Robust error management
+- **Data integrity** - Secure and reliable data processing
+- **Audit trails** - Complete history and tracking
+
+---
+
+## 🔧 **Integration & API**
+
+### **RESTful API**
+- **Job management endpoints** - Create, read, update, delete jobs
+- **Status checking** - Real-time job status updates
+- **Content retrieval** - Get generated LLMs.txt content
+- **Authentication** - Secure API access with OAuth tokens
+
+### **Webhook Support**
+- **Job completion notifications** - Get notified when jobs complete
+- **Content change alerts** - Receive alerts when content changes
+- **Error notifications** - Get notified of processing errors
+- **Custom integrations** - Connect with your existing workflows
+
+---
+
+## 📞 **Support & Documentation**
+
+### **Documentation**
+- **API Reference** - Complete API documentation
+- **User Guide** - Step-by-step usage instructions
+- **Integration Guide** - How to integrate with your systems
+- **Troubleshooting** - Common issues and solutions
+
+### **Support Options**
+- **Email Support** - Direct support for enterprise customers
+- **Documentation** - Comprehensive guides and tutorials
+- **Community** - User community for questions and tips
+- **Professional Services** - Custom integration and consulting
+
+---
+
+**Ready to transform your web content processing? [Try LLM Scribe today](https://llm-scribe.vercel.app/)**
+
+---
+
+*Built with ❤️ using Next.js 15, React 19, and Supabase*
