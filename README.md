@@ -162,34 +162,6 @@ The application seamlessly integrates with the custom crawling API:
 
 ---
 
-## 🎯 **Use Cases**
-
-### **Content Teams**
-- Generate LLMs.txt content for multiple websites
-- Monitor competitor websites for content changes
-- Automate content extraction workflows
-- Track content freshness across multiple sources
-
-### **SEO & Marketing**
-- Monitor website content changes
-- Track competitor content updates
-- Generate structured content for analysis
-- Automate content monitoring workflows
-
-### **Development Teams**
-- Monitor API documentation changes
-- Track website updates and deployments
-- Generate content for automated testing
-- Monitor third-party service changes
-
-### **Research & Analysis**
-- Collect structured content from multiple sources
-- Monitor news and information websites
-- Track policy and regulatory changes
-- Generate datasets for analysis
-
----
-
 ## 🚀 **Getting Started**
 
 ### **Live Demo**
@@ -239,34 +211,6 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 - **Content change alerts** - Receive alerts when content changes
 - **Error notifications** - Get notified of processing errors
 - **Custom integrations** - Connect with your existing workflows
-
----
-
-## 🏆 **Why Choose LLM Scribe?**
-
-### **Full-Stack Solution**
-- **Complete Architecture**: From frontend UI to backend crawling engine
-- **Custom-Built API**: Dedicated microservice for optimal performance
-- **Production Deployment**: Both frontend and API deployed and operational
-- **Enterprise Integration**: Seamless communication between services
-
-### **Proven Technology**
-- Built on industry-standard technologies (Next.js, React, Supabase, FastAPI)
-- Production-ready with enterprise-grade security
-- Scalable architecture designed for growth
-- Comprehensive error handling and monitoring
-
-### **Enterprise Ready**
-- Secure authentication and authorization
-- Data isolation and privacy protection
-- Comprehensive audit trails
-- Professional support and documentation
-
-### **Cost Effective**
-- No infrastructure management required
-- Automatic scaling and optimization
-- Pay-per-use pricing model
-- Reduced manual work and overhead
 
 ---
 
