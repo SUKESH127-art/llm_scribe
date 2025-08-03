@@ -1,5 +1,3 @@
-/** @format */
-
 'use client';
 
 import { CrawlJob } from '@/lib/types';
@@ -21,15 +19,12 @@ import {
 } from '@/components/ui/card';
 import { JobActions } from './job-actions';
 
-// CHANGE: Added a specific type for the component's props for clarity.
 type JobHistoryTableProps = {
-    /** The list of jobs to display, passed from the parent component. */
-    jobs: CrawlJob[]; // Renaming to `jobs` for clarity
+    jobs: CrawlJob[];
     onDeleteJob: (jobId: string) => Promise<void>;
-    onRetryJob: (jobId: string) => Promise<void>; // Add the retry handler prop
+    onRetryJob: (jobId: string) => Promise<void>;
 };
 
-// component renders initial job list from parent server component.
 export function JobHistoryTable({
     jobs,
     onDeleteJob,
@@ -37,14 +32,10 @@ export function JobHistoryTable({
 }: JobHistoryTableProps) {
     const getBadgeVariant = (status: CrawlJob['status']) => {
         switch (status) {
-            case 'completed':
-                return 'default'; // blue
-            case 'pending':
-                return 'secondary'; // gray
-            case 'failed':
-                return 'destructive'; // orange
-            default:
-                return 'outline';
+            case 'completed': return 'default';
+            case 'pending': return 'secondary';
+            case 'failed': return 'destructive';
+            default: return 'outline';
         }
     };
 
@@ -53,8 +44,7 @@ export function JobHistoryTable({
             <CardHeader>
                 <CardTitle>Job History</CardTitle>
                 <CardDescription>
-                    A list of your 8 most recent crawl jobs. Pending jobs will
-                    update automatically.
+                    A list of your most recent crawl jobs. Pending jobs will update automatically.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -64,32 +54,22 @@ export function JobHistoryTable({
                             <TableHead className='w-[40%]'>URL</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Created</TableHead>
-                            <TableHead className='text-right'>
-                                Actions
-                            </TableHead>
+                            <TableHead className='text-right'>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {jobs.map(job => (
                             <TableRow key={job.id}>
-                                <TableCell className='font-medium truncate'>
-                                    {job.target_url}
-                                </TableCell>
+                                <TableCell className='font-medium truncate'>{job.target_url}</TableCell>
                                 <TableCell>
-                                    <Badge
-                                        variant={getBadgeVariant(job.status)}
-                                    >
-                                        {job.status}
-                                    </Badge>
+                                    <Badge variant={getBadgeVariant(job.status)}>{job.status}</Badge>
                                 </TableCell>
-                                <TableCell>
-                                    {new Date(job.created_at).toLocaleString()}
-                                </TableCell>
+                                <TableCell>{new Date(job.created_at).toLocaleString()}</TableCell>
                                 <TableCell className='text-right'>
                                     <JobActions
                                         job={job}
                                         onDeleteJob={onDeleteJob}
-                                        onRetryJob={onRetryJob} // Pass the handler down
+                                        onRetryJob={onRetryJob}
                                     />
                                 </TableCell>
                             </TableRow>
