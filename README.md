@@ -52,17 +52,26 @@ LLM Scribe is a production-ready web application that automatically crawls websi
 - **Real-time updates** - See job status changes as they happen
 - **One-click operations** - Copy LLMs.txt content to clipboard instantly
 
+![Dashboard Interface](images/Dashboard.png)
+*Modern, responsive dashboard with real-time job tracking and status updates*
+
 ### **Job Management**
 - **Create jobs** - Submit any URL for processing
 - **Track progress** - Real-time status updates with visual indicators
 - **Manage history** - View your 8 most recent jobs with full details
 - **Handle failures** - Retry failed jobs with a single click
 
+![Pending Job Status](images/pending_job.png)
+*Real-time job status tracking with optimistic UI updates and progress indicators*
+
 ### **Content Generation**
 - **LLMs.txt creation** - Generate structured content from any website
 - **Preview functionality** - View content before copying
 - **Copy to clipboard** - One-click content extraction
 - **Stale content detection** - Automatic re-crawling when content changes
+
+![Generated LLMs.txt Content](images/generated_txt.png)
+*One-click LLMs.txt content generation with copy-to-clipboard functionality*
 
 ---
 
@@ -75,6 +84,18 @@ LLM Scribe is a production-ready web application that automatically crawls websi
 - **Database**: PostgreSQL with Row Level Security
 - **Authentication**: Supabase Auth with Google OAuth
 - **Deployment**: Vercel with automatic CI/CD
+
+### **Database Architecture**
+Our robust database design ensures data security and scalability:
+
+![Database Design](images/DB_design_for_crawl_jobs.png)
+*Comprehensive database schema with Row Level Security (RLS) ensuring data isolation and security*
+
+### **Authentication System**
+Secure, enterprise-grade authentication flow:
+
+![Google Authentication](images/google_auth.png)
+*Secure Google OAuth 2.0 integration providing enterprise-grade authentication*
 
 ### **Key Design Patterns**
 - **Server Actions** - Secure backend operations
@@ -114,6 +135,34 @@ LLM Scribe is a production-ready web application that automatically crawls websi
 - **Secure session management** - Proper session handling and cleanup
 - **Audit trails** - Complete job history and status tracking
 - **GDPR ready** - User data control and deletion capabilities
+
+---
+
+## 🎯 **Use Cases**
+
+### **Content Teams**
+- Generate LLMs.txt content for multiple websites
+- Monitor competitor websites for content changes
+- Automate content extraction workflows
+- Track content freshness across multiple sources
+
+### **SEO & Marketing**
+- Monitor website content changes
+- Track competitor content updates
+- Generate structured content for analysis
+- Automate content monitoring workflows
+
+### **Development Teams**
+- Monitor API documentation changes
+- Track website updates and deployments
+- Generate content for automated testing
+- Monitor third-party service changes
+
+### **Research & Analysis**
+- Collect structured content from multiple sources
+- Monitor news and information websites
+- Track policy and regulatory changes
+- Generate datasets for analysis
 
 ---
 
@@ -185,34 +234,36 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 
 ---
 
+## 🏆 **Why Choose LLM Scribe?**
+
+### **Proven Technology**
+- Built on industry-standard technologies (Next.js, React, Supabase)
+- Production-ready with enterprise-grade security
+- Scalable architecture designed for growth
+- Comprehensive error handling and monitoring
+
+### **User Experience**
+- Modern, intuitive interface
+- Real-time updates and feedback
+- Mobile-responsive design
+- Accessibility compliant
+
+### **Enterprise Ready**
+- Secure authentication and authorization
+- Data isolation and privacy protection
+- Comprehensive audit trails
+- Professional support and documentation
+
+### **Cost Effective**
+- No infrastructure management required
+- Automatic scaling and optimization
+- Pay-per-use pricing model
+- Reduced manual work and overhead
+
+---
+
 **Ready to transform your web content processing? [Try LLM Scribe today](https://llm-scribe.vercel.app/)**
 
 ---
 
 *Built with ❤️ using Next.js 15, React 19, and Supabase*
----
-
-## 📸 **Implementation Showcase**
-
-### **Database Architecture**
-![Database Design](images/DB_design_for_crawl_jobs.png)
-*Comprehensive database schema with Row Level Security (RLS) ensuring data isolation and security*
-
-### **User Authentication**
-![Google Authentication](images/google_auth.png)
-*Secure Google OAuth 2.0 integration providing enterprise-grade authentication*
-
-### **Dashboard Overview**
-![Dashboard Interface](images/Dashboard.png)
-*Modern, responsive dashboard with real-time job tracking and status updates*
-
-### **Job Processing**
-![Pending Job Status](images/pending_job.png)
-*Real-time job status tracking with optimistic UI updates and progress indicators*
-
-### **Content Generation**
-![Generated LLMs.txt Content](images/generated_txt.png)
-*One-click LLMs.txt content generation with copy-to-clipboard functionality*
-
----
-
