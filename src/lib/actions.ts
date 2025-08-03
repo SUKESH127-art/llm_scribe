@@ -275,38 +275,75 @@ export async function retryCrawlJob(jobId: string) {
  * @returns An object indicating success or failure with a message.
  */
 export async function deleteCrawlJob(jobId: string) {
+    console.log('!!! DELETE CRAWL JOB ACTION STARTED !!!', { jobId });
+    
     const supabase = await createServerSupabaseClient();
     try {
+        console.log('!!! DELETE CRAWL JOB: Getting user authentication !!!');
         const {
             data: { user },
         } = await supabase.auth.getUser();
 
         if (!user) {
+            console.error('!!! DELETE CRAWL JOB ACTION FAILED !!!', { error: 'User not authenticated', jobId });
             throw new Error('User not authenticated');
         }
 
+        console.log('!!! DELETE CRAWL JOB: User authenticated !!!', { userId: user.id, jobId });
+
+        console.log('!!! DELETE CRAWL JOB: Attempting database delete !!!', { jobId });
         const { data: deletedJob, error } = await supabase
             .from('crawl_jobs')
             .delete()
             .eq('id', jobId)
             .select();
 
+        console.log('!!! DELETE CRAWL JOB: Database response received !!!', { 
+            jobId, 
+            hasError: !!error, 
+            error: error ? error.message : null,
+            deletedJobCount: deletedJob ? deletedJob.length : 0,
+            deletedJob: deletedJob
+        });
+
         if (error) {
+            console.error('!!! DELETE CRAWL JOB ACTION FAILED !!!', { 
+                error: error.message, 
+                errorCode: error.code,
+                errorDetails: error.details,
+                jobId 
+            });
             throw error;
         }
+        
         // --- NEW: Check if anything was actually deleted ---
         if (!deletedJob || deletedJob.length === 0) {
             // This is our RLS failure case. The query ran but affected 0 rows.
+            console.error('!!! DELETE CRAWL JOB ACTION FAILED !!!', { 
+                error: 'Delete failed: Job not found or permission denied by RLS.',
+                jobId,
+                deletedJob,
+                deletedJobLength: deletedJob ? deletedJob.length : 'null'
+            });
             throw new Error(
                 'Delete failed: Job not found or permission denied by RLS.'
             );
         }
 
-        console.log('Successfully deleted job:', deletedJob[0]);
+        console.log('!!! DELETE CRAWL JOB ACTION SUCCESS !!!', { 
+            jobId, 
+            deletedJob: deletedJob[0],
+            deletedJobId: deletedJob[0]?.id 
+        });
 
         await revalidatePath('/dashboard');
         return { success: true, message: 'Job deleted successfully!' };
     } catch (error) {
+        console.error('!!! DELETE CRAWL JOB ACTION FAILED !!!', { 
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorObject: error,
+            jobId 
+        });
         return {
             success: false,
             message:
