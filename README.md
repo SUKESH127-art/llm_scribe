@@ -190,3 +190,29 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 ---
 
 *Built with ❤️ using Next.js 15, React 19, and Supabase*
+---
+
+## 📸 **Implementation Showcase**
+
+### **Database Architecture**
+![Database Design](images/DB_design_for_crawl_jobs.png)
+*Comprehensive database schema with Row Level Security (RLS) ensuring data isolation and security*
+
+### **User Authentication**
+![Google Authentication](images/google_auth.png)
+*Secure Google OAuth 2.0 integration providing enterprise-grade authentication*
+
+### **Dashboard Overview**
+![Dashboard Interface](images/Dashboard.png)
+*Modern, responsive dashboard with real-time job tracking and status updates*
+
+### **Job Processing**
+![Pending Job Status](images/pending_job.png)
+*Real-time job status tracking with optimistic UI updates and progress indicators*
+
+### **Content Generation**
+![Generated LLMs.txt Content](images/generated_txt.png)
+*One-click LLMs.txt content generation with copy-to-clipboard functionality*
+
+---
+
