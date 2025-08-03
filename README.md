@@ -160,22 +160,6 @@ The application seamlessly integrates with the custom crawling API:
 - **Audit trails** - Complete job history and status tracking
 - **GDPR ready** - User data control and deletion capabilities
 
----
-
-## 🚀 **Getting Started**
-
-### **Live Demo**
-Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to see LLM Scribe in action.
-
-### **Key Features to Try**
-1. **Authentication** - Sign in with your Google account
-2. **Job Creation** - Submit a URL for processing
-3. **Real-time Tracking** - Watch the job progress in real-time
-4. **Content Generation** - Generate and copy LLMs.txt content
-5. **Change Detection** - See how stale content is automatically detected
-
-
-
 ## 🔧 **Integration & API**
 
 ### **RESTful API**
@@ -192,7 +176,36 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 
 ---
 
-**Ready to transform your web content processing? [Try LLM Scribe today](https://llm-scribe.vercel.app/)**
+## 🤖 **Automated Monitoring & Change Detection**
+
+### **Cron-Based Automation**
+LLM Scribe implements a sophisticated automated monitoring system that **effectively detects changes and refreshes LLMs.txt files without manual intervention**:
+
+- **Scheduled Monitoring**: Automated cron jobs run every 6 hours to check for content changes
+- **HTTP Header Analysis**: Uses ETag and Last-Modified headers for efficient change detection
+- **Intelligent Refresh Logic**: Automatically triggers new crawls when content is detected as stale
+- **Zero Manual Intervention**: Complete automation ensures content stays current without user action
+
+### **Change Detection Technology**
+The system employs advanced techniques to detect content changes:
+
+- **ETag Validation**: Checks for entity tags to identify content modifications
+- **Last-Modified Headers**: Monitors timestamp changes on target websites
+- **Stale Content Flagging**: Automatically marks jobs as stale when changes are detected
+- **Smart Re-crawling**: Only refreshes content when actual changes are confirmed
+
+### **Automation Workflow**
+1. **Scheduled Execution**: Cron jobs trigger every 6 hours automatically
+2. **Content Analysis**: System checks ETag and Last-Modified headers for each job
+3. **Change Detection**: Compares current headers with stored values
+4. **Automatic Refresh**: Initiates new crawl jobs for stale content
+5. **Status Updates**: Updates job status and flags content as fresh
+
+### **Production Deployment**
+- **Vercel Cron Jobs**: Leverages Vercel's built-in cron functionality for reliable scheduling
+- **Serverless Execution**: Runs on Vercel's edge network for global performance
+- **Error Handling**: Comprehensive error management with automatic retry logic
+- **Monitoring**: Built-in logging and status tracking for all automated operations
 
 ---
 
