@@ -75,6 +75,7 @@ export default function DashboardPage() {
             status: 'pending',
             created_at: new Date().toISOString(),
             is_stale: false,
+            result: null,
         };
         setJobs(currentJobs => [optimisticJob, ...currentJobs]);
         const result = await createCrawlJob(url);
