@@ -13,6 +13,7 @@ A modern web application for managing and tracking web crawling jobs with user a
 - **Database-Level Security**: Leverages Supabase's Row Level Security (RLS) to ensure users can only ever access or modify their own jobs.
 - **Intelligent Content Change Detection**: Advanced cron job system that monitors websites for content changes using HTTP headers (ETag, Last-Modified) for efficient detection.
 - **Production-Ready Cron Jobs**: Secure, rate-limited, and timeout-protected API endpoints for automated site monitoring.
+- **Stale Job Management**: Automatic detection and re-crawling of jobs when content changes are detected.
 - **Modern UI**: Built with Next.js 15, React 19, and Tailwind CSS
 - **Type Safety**: Full TypeScript support
 - **Responsive Design**: Desktop & Mobile Friendly!
@@ -33,6 +34,7 @@ A modern web application for managing and tracking web crawling jobs with user a
 - **Client-Side State Management**: The main dashboard is a client component that manages all application state, including the job list and polling logic, using React hooks (`useState`, `useEffect`, `useCallback`).
 - **Client/Server "Firewall"**: Supabase clients are separated into `lib/supabase.ts` (for the browser) and `lib/supabase-server.ts` to ensure server-only code is never bundled on the client.
 - **Content Change Detection**: Uses HTTP HEAD requests with ETag and Last-Modified headers for efficient content change monitoring without downloading full content.
+- **Stale Job Handling**: Conditional UI rendering and automatic re-crawling for jobs with outdated content.
 
 ## 📋 Prerequisites
 
@@ -91,7 +93,20 @@ Ensure your Supabase database has the following tables and functions:
 
 #### Tables
 - `crawl_jobs` - Stores job information with columns for URL, status, timestamps, and HTTP headers
-- `sites` - (Optional) For basic uptime monitoring
+
+**Required columns:**
+```sql
+- id (uuid, primary key)
+- user_id (uuid, foreign key to auth.users)
+- target_url (text)
+- job_id (text, nullable)
+- status (text: 'pending', 'completed', 'failed')
+- result (text, nullable)
+- created_at (timestamp with time zone)
+- is_stale (boolean, default: false)
+- etag_header (text, nullable)
+- last_modified_header (text, nullable)
+```
 
 #### Functions
 - `get_latest_job_for_each_url()` - Returns the most recent job for each unique URL
@@ -125,6 +140,7 @@ The application includes a sophisticated cron job system that monitors websites 
 - **Timeout Protection**: 15-second timeout per request to prevent hanging
 - **Concurrent Processing**: Batch database updates for better performance
 - **Robust Error Handling**: Distinguishes between timeout errors and other failures
+- **Header Storage**: Automatically stores ETag and Last-Modified headers for future comparisons
 
 ### Testing the Cron Job
 
@@ -157,6 +173,42 @@ Example Vercel cron configuration in `vercel.json`:
 }
 ```
 
+## 🧪 Testing
+
+### Manual Testing Checklist
+
+1. **Authentication Flow**
+   - Visit `/` → Redirected to `/login`
+   - Sign in with Google → Redirected to `/dashboard`
+
+2. **Job Management**
+   - Create new job → Appears immediately with "pending" status
+   - Wait for completion → Status changes to "completed" or "failed"
+   - Delete job → Job disappears, success toast appears
+
+3. **Stale Job Detection**
+   - Manually set `is_stale: true` in database for a completed job
+   - Refresh dashboard → Job shows "Re-crawl" button instead of "Create LLMs.txt"
+   - Click "Re-crawl" → New pending job created, original deleted
+
+4. **Content Change Detection**
+   - Run cron job manually → Jobs get `etag_header` and `last_modified_header` values
+   - When websites change → Jobs automatically marked as `is_stale: true`
+
+### Automated Testing
+
+```bash
+# Test cron job authentication
+curl -X GET http://localhost:3000/api/cron/check-sites \
+-H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Test build process
+npm run build
+
+# Test linting
+npm run lint
+```
+
 ## 📁 Project Structure
 
 ```
@@ -175,6 +227,7 @@ llm_scribe/
 │   │   └── ui/                # Reusable UI components
 │   └── lib/                   # Utility functions and configurations
 ├── public/                    # Static assets
+├── vercel.json               # Vercel deployment configuration
 └── package.json
 ```
 
@@ -192,6 +245,7 @@ llm_scribe/
 3. **Track Progress**: Monitor job status and results in the job history table
 4. **Real-time Updates**: See immediate feedback when jobs are submitted
 5. **Content Monitoring**: Automated cron jobs detect when sites have changed content
+6. **Stale Job Management**: Re-crawl jobs when content changes are detected
 
 ## 🚀 Deployment
 
@@ -222,6 +276,21 @@ Make sure to set the following environment variables in your production environm
 - **Cron Job Security**: Bearer token authentication for automated endpoints
 - **Rate Limiting**: Built-in delays to prevent overwhelming target servers
 - **Timeout Protection**: Prevents hanging requests and resource exhaustion
+- **Input Validation**: Server-side validation for all user inputs
+
+## 🐛 Recent Fixes
+
+### v1.1.0 (Latest)
+- ✅ **Fixed Database Schema**: Added missing fields (`etag_header`, `last_modified_header`, `idx`) to TypeScript types
+- ✅ **Fixed Delete Functionality**: Jobs now delete permanently from database
+- ✅ **Enhanced Cron Job**: Now stores HTTP headers for proper change detection
+- ✅ **Improved Job Creation**: Added `is_stale` field initialization
+- ✅ **Stale Job UI**: Conditional rendering for "Re-crawl" vs "Create LLMs.txt" buttons
+- ✅ **Better Error Handling**: Consistent JSON responses and proper error messages
+- ✅ **Build Issues**: Resolved all TypeScript compilation errors
+
+### Known Issues
+- None currently identified
 
 ## 🤝 Contributing
 

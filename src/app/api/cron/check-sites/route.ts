@@ -48,10 +48,12 @@ export async function GET(request: NextRequest) {
         const newEtag = response.headers.get('etag');
         const newLastModified = response.headers.get('last-modified');
 
+        // Check if we have existing headers to compare against
         const hasEtagChanged = job.etag_header && newEtag && job.etag_header !== newEtag;
         const hasLastModifiedChanged = job.last_modified_header && newLastModified && new Date(newLastModified) > new Date(job.last_modified_header);
 
         if (hasEtagChanged || hasLastModifiedChanged) {
+          // Content has changed - mark as stale
           const promise = supabaseAdmin
             .from('crawl_jobs')
             .update({ is_stale: true })
@@ -59,6 +61,17 @@ export async function GET(request: NextRequest) {
           
           updatePromises.push(promise);
           updatedCount++;
+        } else if (!job.etag_header && !job.last_modified_header) {
+          // First time checking this job - store the headers for future comparison
+          const promise = supabaseAdmin
+            .from('crawl_jobs')
+            .update({ 
+              etag_header: newEtag,
+              last_modified_header: newLastModified
+            })
+            .eq('id', job.id);
+          
+          updatePromises.push(promise);
         }
       } catch (fetchError) {
         // Logging for individual fetch errors

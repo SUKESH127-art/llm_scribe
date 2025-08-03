@@ -101,7 +101,12 @@ export async function createCrawlJob(url: string) {
         // Create the job in our DB instantly
         const { data: newJob, error: insertError } = await supabase
             .from('crawl_jobs')
-            .insert({ target_url: url, user_id: user.id, status: 'pending' })
+            .insert({ 
+                target_url: url, 
+                user_id: user.id, 
+                status: 'pending',
+                is_stale: false 
+            })
             .select('id')
             .single();
 
@@ -195,6 +200,71 @@ export async function checkJobStatus(job: CrawlJob) {
         revalidatePath('/dashboard');
     } catch (error) {
         console.error(`Error in checkJobStatus for job ${job.job_id}:`, error);
+    }
+}
+
+/**
+ * Retries a crawl job by creating a new job with the same URL.
+ * This is used for both failed jobs and stale jobs that need re-crawling.
+ * @param jobId - The UUID of the job to retry.
+ * @returns An object indicating success or failure with a message.
+ */
+export async function retryCrawlJob(jobId: string) {
+    const supabase = await createServerSupabaseClient();
+    try {
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            throw new Error('User not authenticated');
+        }
+
+        // Get the original job to extract the URL
+        const { data: originalJob, error: fetchError } = await supabase
+            .from('crawl_jobs')
+            .select('target_url')
+            .eq('id', jobId)
+            .single();
+
+        if (fetchError || !originalJob) {
+            throw new Error('Original job not found');
+        }
+
+        // Create a new job with the same URL
+        const { data: newJob, error: createError } = await supabase
+            .from('crawl_jobs')
+            .insert({
+                user_id: user.id,
+                target_url: originalJob.target_url,
+                status: 'pending',
+                result: null,
+                is_stale: false, // Reset stale flag for new job
+            })
+            .select()
+            .single();
+
+        if (createError) {
+            throw createError;
+        }
+
+        // Trigger the background job
+        triggerAndTrackJob(newJob.id, originalJob.target_url, supabase);
+
+        // Mark the original job as deleted (optional - you might want to keep it for history)
+        await supabase
+            .from('crawl_jobs')
+            .delete()
+            .eq('id', jobId);
+
+        await revalidatePath('/dashboard');
+        return { success: true, message: 'Job has been resubmitted successfully!' };
+    } catch (error) {
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Failed to retry job.',
+        };
     }
 }
 

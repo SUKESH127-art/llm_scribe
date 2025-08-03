@@ -10,7 +10,8 @@ import { JobForm } from './components/job-form';
 import { CrawlJob } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Session } from '@supabase/supabase-js';
-import { checkJobStatus, signOut } from '@/lib/actions';
+import { checkJobStatus, signOut, deleteCrawlJob } from '@/lib/actions';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -97,15 +98,28 @@ export default function DashboardPage() {
             created_at: new Date().toISOString(),
             job_id: null, // No external job_id yet
             result: null,
+            is_stale: false,
         };
 
         // Prepend it to jobs list in our state to instantly update UI.
         setJobs(currentJobs => [optimisticJob, ...currentJobs]);
     };
 
-    // CHANGE: This function is now simpler. It only handles the optimistic UI update.
-    const handleDeleteJob = (jobId: string) => {
+    // CHANGE: This function now calls the server action and handles the response properly
+    const handleDeleteJob = async (jobId: string) => {
+        // Optimistic UI update
         setJobs(currentJobs => currentJobs.filter(job => job.id !== jobId));
+        
+        // Call the server action
+        const result = await deleteCrawlJob(jobId);
+        
+        if (!result.success) {
+            // If deletion failed, revert the optimistic update
+            await fetchJobs();
+            toast.error(result.message || 'Failed to delete job');
+        } else {
+            toast.success('Job deleted successfully');
+        }
     };
 
     if (loading) {

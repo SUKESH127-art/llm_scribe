@@ -14,7 +14,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Copy, X } from 'lucide-react';
-import { DialogDescription } from '@radix-ui/react-dialog';
+import { retryCrawlJob } from '@/lib/actions';
 
 type JobActionsProps = {
     job: CrawlJob;
@@ -23,6 +23,7 @@ type JobActionsProps = {
 
 export function JobActions({ job, onDeleteJob }: JobActionsProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isRetrying, setIsRetrying] = useState(false);
 
     const handleCopy = async () => {
         if (!job.result) {
@@ -36,6 +37,43 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
             console.error('Failed to copy: ', err);
         }
     };
+
+    const handleRetry = async () => {
+        setIsRetrying(true);
+        // This function is perfect for both "Retry" and "Re-crawl"
+        const result = await retryCrawlJob(job.id); 
+        if (result.success) {
+            toast.success("Job has been resubmitted.");
+        } else {
+            toast.error(result.message);
+        }
+        setIsRetrying(false);
+    };
+
+    // If the job is stale, show a "Re-crawl" button.
+    // This button will reuse our existing retry logic.
+    if (job.is_stale) {
+        return (
+            <div className='flex justify-end items-center space-x-2'>
+                <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleRetry}  
+                    disabled={isRetrying}
+                >
+                    {isRetrying ? 'Re-crawling...' : 'Re-crawl'}
+                </Button>
+                <Button
+                    variant='destructive'
+                    size='sm'
+                    onClick={() => onDeleteJob(job.id)}
+                    className='hover:bg-transparent hover:text-destructive hover:border-destructive border-2'
+                >
+                    Delete
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className='flex justify-end items-center space-x-2'>
@@ -74,6 +112,18 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                         />
                     </DialogContent>
                 </Dialog>
+            )}
+
+            {/* Show retry button for failed jobs */}
+            {job.status === 'failed' && (
+                <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleRetry}
+                    disabled={isRetrying}
+                >
+                    {isRetrying ? 'Retrying...' : 'Retry'}
+                </Button>
             )}
 
             {/* Always show the delete button */}

@@ -10,4 +10,8 @@ export type CrawlJob = {
     status: 'pending' | 'completed' | 'failed';
     result: string | null;
     created_at: string;
+    is_stale: boolean;
+    etag_header?: string | null;
+    last_modified_header?: string | null;
+    idx?: number;
 };
