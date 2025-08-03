@@ -85,6 +85,21 @@ LLM Scribe is a production-ready web application that automatically crawls websi
 - **Authentication**: Supabase Auth with Google OAuth
 - **Deployment**: Vercel with automatic CI/CD
 
+### **Custom-Built Crawling API**
+LLM Scribe leverages a **production-ready microservice** specifically built for this project:
+
+- **Dedicated Crawling Engine**: [Python Web Crawler API](https://github.com/SUKESH127-art/python_web_crawler) - A stateless, asynchronous microservice
+- **Live Production API**: [https://llms-txt-crawler-api.onrender.com](https://llms-txt-crawler-api.onrender.com)
+- **Technology**: FastAPI + Firecrawl + Docker + CircleCI
+- **Architecture**: Stateless design with horizontal scaling capabilities
+
+#### **Key API Features:**
+- **Asynchronous Job Processing**: Non-blocking crawl operations with real-time status polling
+- **Intelligent Content Structuring**: Automatically groups pages by URL path and applies language filtering
+- **Production Security**: API key authentication, input validation, and secure error handling
+- **Enterprise Scalability**: Stateless design enables horizontal scaling across multiple instances
+- **CI/CD Pipeline**: Automated deployment with CircleCI and Docker Hub integration
+
 ### **Database Architecture**
 Our robust database design ensures data security and scalability:
 
@@ -103,6 +118,15 @@ Secure, enterprise-grade authentication flow:
 - **Real-time Polling** - Automatic status synchronization
 - **Content Change Detection** - HTTP header-based monitoring
 - **Stale Job Management** - Intelligent re-crawling system
+
+### **Frontend-API Integration**
+The application seamlessly integrates with the custom crawling API:
+
+- **Job Submission**: Frontend submits URLs to the Python API via Next.js Server Actions
+- **Status Polling**: Real-time job status updates through the `/crawl-status/{job_id}` endpoint
+- **Content Retrieval**: Generated LLMs.txt content fetched and displayed in the UI
+- **Error Handling**: Comprehensive error management across both frontend and API layers
+- **Security**: API key authentication ensures secure communication between services
 
 ---
 
@@ -210,7 +234,7 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 - **Content retrieval** - Get generated LLMs.txt content
 - **Authentication** - Secure API access with OAuth tokens
 
-### **Webhook Support**
+### **Notifications Support**
 - **Job completion notifications** - Get notified when jobs complete
 - **Content change alerts** - Receive alerts when content changes
 - **Error notifications** - Get notified of processing errors
@@ -218,35 +242,19 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 
 ---
 
-## 📞 **Support & Documentation**
-
-### **Documentation**
-- **API Reference** - Complete API documentation
-- **User Guide** - Step-by-step usage instructions
-- **Integration Guide** - How to integrate with your systems
-- **Troubleshooting** - Common issues and solutions
-
-### **Support Options**
-- **Email Support** - Direct support for enterprise customers
-- **Documentation** - Comprehensive guides and tutorials
-- **Community** - User community for questions and tips
-- **Professional Services** - Custom integration and consulting
-
----
-
 ## 🏆 **Why Choose LLM Scribe?**
 
+### **Full-Stack Solution**
+- **Complete Architecture**: From frontend UI to backend crawling engine
+- **Custom-Built API**: Dedicated microservice for optimal performance
+- **Production Deployment**: Both frontend and API deployed and operational
+- **Enterprise Integration**: Seamless communication between services
+
 ### **Proven Technology**
-- Built on industry-standard technologies (Next.js, React, Supabase)
+- Built on industry-standard technologies (Next.js, React, Supabase, FastAPI)
 - Production-ready with enterprise-grade security
 - Scalable architecture designed for growth
 - Comprehensive error handling and monitoring
-
-### **User Experience**
-- Modern, intuitive interface
-- Real-time updates and feedback
-- Mobile-responsive design
-- Accessibility compliant
 
 ### **Enterprise Ready**
 - Secure authentication and authorization
@@ -266,4 +274,4 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 
 ---
 
-*Built with ❤️ using Next.js 15, React 19, and Supabase*
+*Built with ❤️ using Next.js 15, React 19, Supabase, and FastAPI*
