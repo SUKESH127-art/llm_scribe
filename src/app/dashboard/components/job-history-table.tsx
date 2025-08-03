@@ -12,7 +12,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -20,22 +19,21 @@ import {
     CardTitle,
     CardDescription,
 } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { deleteCrawlJob } from '@/lib/actions';
-import { useRouter } from 'next/navigation';
 import { JobActions } from './job-actions';
 
 // CHANGE: Added a specific type for the component's props for clarity.
 type JobHistoryTableProps = {
     /** The list of jobs to display, passed from the parent component. */
-    initialJobs: CrawlJob[];
-    onDeleteJob: (jobId: string) => void;
+    jobs: CrawlJob[]; // Renaming to `jobs` for clarity
+    onDeleteJob: (jobId: string) => Promise<void>;
+    onRetryJob: (jobId: string) => Promise<void>; // Add the retry handler prop
 };
 
 // component renders initial job list from parent server component.
 export function JobHistoryTable({
-    initialJobs,
+    jobs,
     onDeleteJob,
+    onRetryJob,
 }: JobHistoryTableProps) {
     const getBadgeVariant = (status: CrawlJob['status']) => {
         switch (status) {
@@ -72,7 +70,7 @@ export function JobHistoryTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {initialJobs.map(job => (
+                        {jobs.map(job => (
                             <TableRow key={job.id}>
                                 <TableCell className='font-medium truncate'>
                                     {job.target_url}
@@ -91,13 +89,14 @@ export function JobHistoryTable({
                                     <JobActions
                                         job={job}
                                         onDeleteJob={onDeleteJob}
+                                        onRetryJob={onRetryJob} // Pass the handler down
                                     />
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-                {initialJobs.length === 0 && (
+                {jobs.length === 0 && (
                     <div className='text-center p-8 text-muted-foreground'>
                         You have no jobs yet.
                     </div>

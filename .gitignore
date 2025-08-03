@@ -47,3 +47,6 @@ next-env.d.ts
 .prettierrc.js
 .eslintrc.yml
 .prettierrc.yml
+
+# documentation
+gemini_updates.md

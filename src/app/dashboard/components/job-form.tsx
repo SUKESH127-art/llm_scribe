@@ -3,7 +3,6 @@
 "use client";
 
 import { useState } from "react";
-import { createCrawlJob } from "@/lib/actions";
 import { toast } from "sonner";
 import {
 	Card,
@@ -16,14 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type JobFormProps = {
-	/** Callback function invoked with the submitted URL on successful job creation. */
-	onJobSubmitted: (url: string) => void;
+	// This prop now expects the async handler from the parent
+	onJobSubmit: (url: string) => Promise<void>;
 };
 
 /**
  * A form for submitting new URLs to be crawled.
  */
-export function JobForm({ onJobSubmitted }: JobFormProps) {
+export function JobForm({ onJobSubmit }: JobFormProps) {
 	const [url, setUrl] = useState("");
 	const [isPending, setIsPending] = useState(false);
 
@@ -34,17 +33,11 @@ export function JobForm({ onJobSubmitted }: JobFormProps) {
 			return;
 		}
 		setIsPending(true);
-
-		const result = await createCrawlJob(url);
-
-		if (result.success) {
-			toast.success(result.message);
-			// Instead of refreshing, call the function from our parent component
-			onJobSubmitted(url); // Optimistic update
-			setUrl("");
-		} else {
-			toast.error(result.message);
-		}
+		
+		// Just call the handler passed from the parent page
+		await onJobSubmit(url);
+		
+		setUrl("");
 		setIsPending(false);
 	};
 

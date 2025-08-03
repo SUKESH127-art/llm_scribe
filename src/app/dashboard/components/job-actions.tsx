@@ -14,16 +14,19 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Copy, X } from 'lucide-react';
-import { retryCrawlJob } from '@/lib/actions';
+// --- REMOVE `retryCrawlJob` import ---
 
 type JobActionsProps = {
     job: CrawlJob;
-    onDeleteJob: (jobId: string) => void;
+    onDeleteJob: (jobId: string) => Promise<void>;
+    onRetryJob: (jobId: string) => Promise<void>;
 };
 
-export function JobActions({ job, onDeleteJob }: JobActionsProps) {
+export function JobActions({ job, onDeleteJob, onRetryJob }: JobActionsProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isRetrying, setIsRetrying] = useState(false);
+    // Add a separate loading state for delete
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleCopy = async () => {
         if (!job.result) {
@@ -40,14 +43,14 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
 
     const handleRetry = async () => {
         setIsRetrying(true);
-        // This function is perfect for both "Retry" and "Re-crawl"
-        const result = await retryCrawlJob(job.id); 
-        if (result.success) {
-            toast.success("Job has been resubmitted.");
-        } else {
-            toast.error(result.message);
-        }
-        setIsRetrying(false);
+        await onRetryJob(job.id);
+        // No need to set isRetrying false unless you want to re-enable the button immediately
+        // The parent re-render will likely remove this component anyway
+    };
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        await onDeleteJob(job.id);
     };
 
     // If the job is stale, show a "Re-crawl" button.
@@ -59,17 +62,17 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                     variant="outline" 
                     size="sm"
                     onClick={handleRetry}  
-                    disabled={isRetrying}
+                    disabled={isRetrying || isDeleting}
                 >
                     {isRetrying ? 'Re-crawling...' : 'Re-crawl'}
                 </Button>
                 <Button
                     variant='destructive'
                     size='sm'
-                    onClick={() => onDeleteJob(job.id)}
-                    className='hover:bg-transparent hover:text-destructive hover:border-destructive border-2'
+                    onClick={handleDelete}
+                    disabled={isRetrying || isDeleting}
                 >
-                    Delete
+                    {isDeleting ? 'Deleting...' : 'Delete'}
                 </Button>
             </div>
         );
@@ -120,7 +123,7 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
                     variant='outline'
                     size='sm'
                     onClick={handleRetry}
-                    disabled={isRetrying}
+                    disabled={isRetrying || isDeleting}
                 >
                     {isRetrying ? 'Retrying...' : 'Retry'}
                 </Button>
@@ -130,10 +133,10 @@ export function JobActions({ job, onDeleteJob }: JobActionsProps) {
             <Button
                 variant='destructive'
                 size='sm'
-                onClick={() => onDeleteJob(job.id)}
-                className='hover:bg-transparent hover:text-destructive hover:border-destructive border-2'
+                onClick={handleDelete}
+                disabled={isRetrying || isDeleting}
             >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
         </div>
     );

@@ -10,7 +10,14 @@ import { JobForm } from './components/job-form';
 import { CrawlJob } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Session } from '@supabase/supabase-js';
-import { checkJobStatus, signOut, deleteCrawlJob } from '@/lib/actions';
+// --- Centralize all action imports here ---
+import { 
+    checkJobStatus, 
+    signOut, 
+    createCrawlJob, 
+    deleteCrawlJob, 
+    retryCrawlJob 
+} from '@/lib/actions';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
@@ -27,6 +34,7 @@ export default function DashboardPage() {
             .order('created_at', { ascending: false });
 
         if (error) {
+            toast.error("Failed to fetch job history.");
             console.error('Error fetching jobs:', error);
         } else {
             setJobs(data || []);
@@ -62,7 +70,7 @@ export default function DashboardPage() {
         };
 
         initializeDashboard();
-    }, [router, supabase, fetchJobs]);
+    }, [router, fetchJobs]);
 
     // This effect is responsible for the real-time status updates.
     useEffect(() => {
@@ -87,38 +95,59 @@ export default function DashboardPage() {
         return () => clearInterval(interval);
     }, [jobs, fetchJobs, loading]);
 
-    // Callback function for optimistic update
-    const handleJobSubmitted = (url: string) => {
-        // Create a temporary, "fake" job object.
+    // --- NEW: Centralized handlers for all job actions ---
+
+    const handleCreateJob = async (url: string) => {
+        // Optimistic update for instant UI feedback
         const optimisticJob: CrawlJob = {
             id: `optimistic-${Date.now()}`,
             user_id: session!.user.id,
             target_url: url,
             status: 'pending',
             created_at: new Date().toISOString(),
-            job_id: null, // No external job_id yet
+            job_id: null,
             result: null,
             is_stale: false,
         };
-
-        // Prepend it to jobs list in our state to instantly update UI.
         setJobs(currentJobs => [optimisticJob, ...currentJobs]);
-    };
 
-    // CHANGE: This function now calls the server action and handles the response properly
+        const result = await createCrawlJob(url);
+        
+        // Always re-fetch to synchronize with the true database state
+        await fetchJobs(); 
+
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
+        }
+    };
+    
     const handleDeleteJob = async (jobId: string) => {
         // Optimistic UI update
         setJobs(currentJobs => currentJobs.filter(job => job.id !== jobId));
         
-        // Call the server action
         const result = await deleteCrawlJob(jobId);
         
         if (!result.success) {
-            // If deletion failed, revert the optimistic update
+            toast.error(result.message);
+            // Re-fetch to restore the job if the delete failed (e.g., due to RLS)
             await fetchJobs();
-            toast.error(result.message || 'Failed to delete job');
         } else {
-            toast.success('Job deleted successfully');
+            toast.success(result.message);
+        }
+    };
+
+    const handleRetryJob = async (jobId: string) => {
+        const result = await retryCrawlJob(jobId);
+
+        // Re-fetch to show the new pending job and remove the old one
+        await fetchJobs();
+
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
         }
     };
 
@@ -148,10 +177,12 @@ export default function DashboardPage() {
                 </Button>
             </header>
             <main>
-                <JobForm onJobSubmitted={handleJobSubmitted} />
+                {/* Pass the new centralized handlers as props */}
+                <JobForm onJobSubmit={handleCreateJob} />
                 <JobHistoryTable
-                    initialJobs={jobs}
+                    jobs={jobs}
                     onDeleteJob={handleDeleteJob}
+                    onRetryJob={handleRetryJob}
                 />
             </main>
         </div>
