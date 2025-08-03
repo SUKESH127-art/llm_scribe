@@ -174,29 +174,7 @@ Visit **[https://llm-scribe.vercel.app/](https://llm-scribe.vercel.app/)** to se
 4. **Content Generation** - Generate and copy LLMs.txt content
 5. **Change Detection** - See how stale content is automatically detected
 
----
 
-## 📈 **Business Value**
-
-### **Time Savings**
-- **Automated monitoring** - No manual checking required
-- **Instant content generation** - Get LLMs.txt content in seconds
-- **Real-time updates** - Always know the latest status
-- **One-click operations** - Minimal user interaction required
-
-### **Cost Efficiency**
-- **No infrastructure management** - Fully managed deployment
-- **Automatic scaling** - Handles traffic spikes automatically
-- **Efficient resource usage** - Optimized for performance
-- **Reduced manual work** - Automate repetitive tasks
-
-### **Quality Assurance**
-- **Consistent output** - Standardized LLMs.txt format
-- **Error handling** - Robust error management
-- **Data integrity** - Secure and reliable data processing
-- **Audit trails** - Complete history and tracking
-
----
 
 ## 🔧 **Integration & API**
 
