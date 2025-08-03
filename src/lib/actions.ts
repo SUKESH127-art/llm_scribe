@@ -41,7 +41,7 @@ async function triggerAndTrackJob(
             );
         }
 
-        // --- NEW: Handle both fast and slow path responses ---
+        // Handle both fast and slow path responses ---
         if (apiData.status === 'completed_immediately') {
             // FAST PATH: The job is already done.
             console.log(
@@ -316,7 +316,7 @@ export async function deleteCrawlJob(jobId: string) {
             throw error;
         }
         
-        // --- NEW: Check if anything was actually deleted ---
+        // Check if anything was actually deleted ---
         if (!deletedJob || deletedJob.length === 0) {
             // This is our RLS failure case. The query ran but affected 0 rows.
             console.error('!!! DELETE CRAWL JOB ACTION FAILED !!!', { 

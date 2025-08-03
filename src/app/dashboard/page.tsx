@@ -23,6 +23,7 @@ export default function DashboardPage() {
     const [jobs, setJobs] = useState<CrawlJob[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Fetches crawl jobs from database, ordered by creation date (descending).
     const fetchJobs = useCallback(async () => {
         const { data, error } = await supabase
             .from('crawl_jobs')
@@ -37,6 +38,7 @@ export default function DashboardPage() {
         }
     }, []);
 
+    // Initializes the dashboard.
     useEffect(() => {
         const initializeDashboard = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -51,6 +53,7 @@ export default function DashboardPage() {
         initializeDashboard();
     }, [router, fetchJobs]);
 
+    // Polls for pending jobs and checks their status.
     useEffect(() => {
         const hasPendingJobs = jobs.some(job => job.status === 'pending');
         if (!hasPendingJobs || loading) return;
@@ -67,6 +70,7 @@ export default function DashboardPage() {
         return () => clearInterval(interval);
     }, [jobs, fetchJobs, loading]);
 
+    // Creates a new job.
     const handleCreateJob = async (url: string) => {
         const optimisticJob: CrawlJob = {
             id: `optimistic-${Date.now()}`,
@@ -87,6 +91,7 @@ export default function DashboardPage() {
         }
     };
     
+    // Deletes a job.
     const handleDeleteJob = async (jobId: string) => {
         setJobs(currentJobs => currentJobs.filter(job => job.id !== jobId));
         const result = await deleteCrawlJob(jobId);
@@ -98,6 +103,7 @@ export default function DashboardPage() {
         }
     };
 
+    // Retries a job.
     const handleRetryJob = async (jobId: string) => {
         const result = await retryCrawlJob(jobId);
         await fetchJobs();
@@ -108,6 +114,7 @@ export default function DashboardPage() {
         }
     };
 
+    // Signs out the user.
     const handleSignOut = async () => await signOut();
 
     if (loading) return <div className="flex items-center justify-center min-h-screen"><p>Loading dashboard...</p></div>;

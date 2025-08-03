@@ -14,8 +14,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Props for the JobForm component.
+ */
 type JobFormProps = {
-	// This prop now expects the async handler from the parent
+	// This prop now expects the async handler from the parent.
 	onJobSubmit: (url: string) => Promise<void>;
 };
 
@@ -26,6 +29,11 @@ export function JobForm({ onJobSubmit }: JobFormProps) {
 	const [url, setUrl] = useState("");
 	const [isPending, setIsPending] = useState(false);
 
+	/**
+	 * Handles the form submission.
+	 * 
+	 * @param event - The form submission event.
+	 */
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!url) {
@@ -34,7 +42,7 @@ export function JobForm({ onJobSubmit }: JobFormProps) {
 		}
 		setIsPending(true);
 		
-		// Just call the handler passed from the parent page
+		// Just call the handler passed from the parent page.
 		await onJobSubmit(url);
 		
 		setUrl("");

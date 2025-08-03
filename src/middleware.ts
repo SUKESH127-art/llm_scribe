@@ -1,6 +1,19 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Middleware function for handling Supabase authentication and session management in Next.js.
+ *
+ * This middleware intercepts incoming requests and attaches a Supabase client instance
+ * configured with the appropriate cookies for authentication. It ensures that the user's
+ * session is refreshed if expired, which is required for seamless authentication in
+ * Next.js Server Components. The middleware also manages setting and removing cookies
+ * in both the request and response objects to keep authentication state in sync.
+ *
+ * @param request - The incoming Next.js request object.
+ * @returns A NextResponse object, potentially with updated cookies, to continue the request lifecycle.
+ */
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,

@@ -19,17 +19,29 @@ import {
 } from '@/components/ui/card';
 import { JobActions } from './job-actions';
 
+/**
+ * Props for the JobHistoryTable component.
+ */
 type JobHistoryTableProps = {
     jobs: CrawlJob[];
     onDeleteJob: (jobId: string) => Promise<void>;
     onRetryJob: (jobId: string) => Promise<void>;
 };
 
+/**
+ * A table component for displaying crawl job history.
+ */
 export function JobHistoryTable({
     jobs,
     onDeleteJob,
     onRetryJob,
 }: JobHistoryTableProps) {
+    /**
+     * Determines the appropriate badge variant based on the job status.
+     * 
+     * @param status - The status of the job.
+     * @returns The badge variant.
+     */
     const getBadgeVariant = (status: CrawlJob['status']) => {
         switch (status) {
             case 'completed': return 'default';

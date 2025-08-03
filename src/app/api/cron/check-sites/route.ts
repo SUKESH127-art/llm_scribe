@@ -12,7 +12,7 @@ const supabaseAdmin = createClient(
 export const maxDuration = 60; // Allow this function to run for up to 60 seconds on Vercel
 
 export async function GET(request: NextRequest) {
-  // IMPROVEMENT 1: More robust authentication check & consistent JSON responses
+  // robust authentication check & consistent JSON responses
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.substring(7) !== process.env.CRON_SECRET) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -29,11 +29,11 @@ export async function GET(request: NextRequest) {
     const updatePromises = [];
 
     for (const job of recentJobs) {
-      // IMPROVEMENT 2: Add a small delay between requests to be a good internet citizen
+      // Add a small delay between requests
       await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
 
       try {
-        // IMPROVEMENT 3: Add timeout protection for fetch requests
+        // timeout protection for fetch requests
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second timeout
 
